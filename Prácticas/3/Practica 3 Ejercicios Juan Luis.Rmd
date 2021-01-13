@@ -1,0 +1,446 @@
+---
+title: "Práctica 3 Ejercicios"
+author: "Juan Luis Herreros Bódalo"
+date: Versión `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Estimación Puntual de Parámetros y Bondad de Ajuste
+---
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Ejercicio 1
+Dados los datos de la muestra que aparece en *ajusta.ejercicio1.txt*, se pide:
+
+  a. Estimar el parámetro $p$ de una distribución binomial con $n=8$ y el error estándar de dicha estimación.
+  b. Obtener una representación gráfica que permita valorar la bondad del ajuste.
+  c. Realizar un contraste de bondad de ajuste y decidir si el ajuste mediante la distribución binomial es aceptable.
+
+## Estimación del parámetro
+
+Primero, importamos los datos.
+```{r}
+datos.binom <- read.delim("ajusta.ejercicio1.txt")
+summary(datos.binom)
+```
+
+La estimación MLE de $p$ en una distribución $B(8, p)$ es $\hat{p} = \bar{x}/8$:
+```{r}
+print(p.est <- mean(datos.binom$x) / 8)
+```
+
+## Error estándar
+
+Viene dada por $s.e.(\hat{p}) \approx \sqrt \frac{\hat{p}(1-\hat{p})}{N}$:
+```{r}
+sqrt(p.est * (1 - p.est) / length(datos.binom$x))
+```
+
+Así que tenemos una estimación del parámetro de `r round(p.est, 2)`, con un error estandar estimado de `r round(sqrt(p.est * (1 - p.est) / length(datos.binom$x)), 2)`.
+
+## Bondad del ajuste
+
+Por tanto, estamos diciendo que para los datos de la muestra creemos que un ajuste adecuado puede ser el que proporciona una distribución binomial de parámetros $n=8$ y $p=$ `r round(p.est, 2)`. Lo que nos preocupa ahora es valorar si, en efecto, ese ajuste es adecuado o no.
+
+En primer lugar, vamos a representar gráficamente un diagrama de barras y, sobre él, vamos a añadir las frecuencias esperadas según el modelo binomial ajustado:
+```{r}
+# Puntos de corte para el histograma
+ptos.corte <- -0.5:8.5
+# Diagrama de barras
+diagrama.binom <- hist(datos.binom$x, breaks = ptos.corte, main = "", xlab = "", ylab = "Frecuencia")
+# Función masa del ajuste
+x <- 0:8
+num.datos <- length(datos.binom$x)
+y <- num.datos * dbinom(0:8, 8, p.est)
+lines(x, y)
+```
+
+Ese gráfico muestra semejanzas entre las frecuencias de valores en la muestra,
+```{r}
+diagrama.binom$counts
+```
+
+y la frecuencia de valores que el modelo dice que debería haber,
+```{r}
+round(num.datos * dbinom(0:8, 8, p.est), 2)
+```
+
+Por ejemplo, tenemos 2 cuatros, y el modelo dice que debería haber también alrededor de 2 (frecuencia esperada 2.21).
+
+Ahora bien, esas similitudes ¿son suficientes para afirmar que el ajuste es adecuado? La respuesta la proporciona el contraste de bondad de ajuste.
+
+## Contraste de bondad de ajuste
+
+```{r}
+# Probabilidades que da la función masa ajustada:
+probs <- dbinom(0:8, 8, p.est)
+# Contraste de bondad de ajuste
+print(gof <- chisq.test(diagrama.binom$counts, p = probs, simulate.p.value = TRUE))
+```
+
+Como podemos ver, el valor del estadístico es `r round(gof$statistic, 2)` y, dado que el p-valor es `r round(gof$p.value, 2)`, ese valor está claramente por debajo del percentil 95, así que nuestro ajuste, como se intuía en el gráfico, es aceptable.
+
+# Ejercicio 2
+
+Dados los datos de la muestra que aparece en *ajusta.ejercicio2.txt*, se pide:
+
+  a. Estimar los parámetros de distribuciones Poisson, geométrica y binomial negativa y sus errores estándar.
+  b. Obtener representaciones gráficas (en la misma figura) que permitan valorar la bondad de los ajustes.
+  c. Realizar contrastes de bondad de ajuste para decidir cuáles de los ajustes son aceptables y cuál es el más adecuado para los datos.
+
+## Estimación de los parámetros y sus errores estándar
+Importamos los datos.
+```{r}
+datos.ej2 <- read.delim("ajusta.ejercicio2.txt")
+summary(datos.ej2)
+```
+
+### Poisson
+
+#### Estimación del parámetro
+
+La estimación MLE de $\lambda$ en una distribución $P(\lambda)$ es $\hat{\lambda} = \bar{x}$:
+```{r}
+print(lam.estp <- mean(datos.ej2$x))
+```
+
+#### Error estándar
+
+Viene dada por $s.e.(\hat{\lambda}) \approx \frac{s_{N-1}}{\sqrt N}$:
+```{r}
+sd(datos.ej2$x) / sqrt(length(datos.ej2$x))
+```
+
+Así que tenemos una estimación del parámetro de `r lam.estp`, con un error estandar estimado de `r round(sd(datos.ej2$x) / sqrt(length(datos.ej2$x)), 2)`.
+
+### Geométrica
+
+#### Estimación del parámetro
+
+La estimación MLE de $p$ en una distribución $Geo(p)$ es $\hat{p} = \frac{1}{1 + \bar{x}}$:
+```{r}
+print(p.estg <- 1 / (1 + mean(datos.ej2$x)))
+```
+
+#### Error estándar
+
+Viene dada por $s.e.(\hat{p}) \approx \sqrt \frac{\hat{p}(1-\hat{p})}{N}$:
+```{r}
+sqrt(p.estg * (1 - p.estg) / length(datos.ej2$x))
+```
+
+Así que tenemos una estimación de la probabilidad de fallo de `r round(p.estg, 2)`, con un error estandar estimado de `r round(sqrt(p.estg * (1 - p.estg) / length(datos.ej2$x)), 2)`.
+
+### Binomial negativa
+
+#### Estimación de los parámetros
+
+Vamos a definir, primero de todo, la función de log-verosimilitud. Recordemos que la función masa de la binomial negativa es
+$$
+f(x) = \frac{\Gamma(a+x)}{\Gamma(a) \Gamma(x+1)} p^a (1-p)^x
+$$
+
+por lo que su logaritmo es
+$$
+\log(f(x)) = \log(a+x) - \log(a) -\log(x+1) + a \log(p) + x \log(1-p)
+$$
+
+Entonces, la función de log-verosimilitud que tenemos que maximizar es $sum_{i=1}^N \log(f(x_i))$:
+$$
+\log L (a, p) = \sum_{i=1}^N {\log(a+x_i)+x_i \log(1-p)} + N(a \log(p) - \log(a) - \log(x+1))
+$$
+
+A la hora de definir esta función en R vamos a introducir en realidad el opuesto de la función, es decir, la función con signo negativo. La razón es que el algoritmo de optimización que vamos a emplear sólo sirve para buscar mínimos, y a nosotros nos da lo mismo buscar el máximo de $\log L$ que el mínimo de $-\log L$:
+
+```{r}
+# Datos de la muestra y número de datos
+x <- datos.ej2$x
+N <- length(x)
+# Opuesto de la función de log-verosimilitud
+logL <- function(pars){
+  a <- pars[1]
+  p <- pars[2]
+  - (sum(log(gamma(a + x)) + x * log(1 - p) - log(gamma(x+1))) + N * (a * log(p) - log(gamma(a))))
+}
+```
+Ahora vamos a buscar el máximo de esta función con la función *optim*. Lo único que es obligatorio especificar al usar esta función, aparte, obviamente, de la función a optimizar, es un valor inicial de los parámetros que estamos buscando. **En teoría**, estos valores iniciales no deben influir en la solución final, así que vamos a poner unos valores *fáciles*:
+```{r, warning=F}
+# Valores iniciales de los parámetros
+a0 <- 1
+p0 <- 0.5
+# Optimización de la función de log-verosimilitud
+mle.nbinom <- optim(par = c(a0, p0), fn = logL)$par
+# Estimaciones MLE
+mle.nbinom
+```
+
+Así pues, tenemos estimaciones $\hat{a}=$ `r round(mle.nbinom[1], 2)` y $\hat{p}=$ `r round(mle.nbinom[2], 2)`.
+
+#### Errores estándar
+
+Lo que vamos a hacer es utilizar remuestro sobre los datos para obtener, por ejemplo, $B=200$ simulaciones de estimaciones MLE, basadas en réplicas de nuestra muestra de datos, de manera que el error estándar será la desviación típica de esas simulaciones:
+```{r, warning=F}
+# Número de réplicas de la muestra:
+B <- 200
+# Vectores vacíos para los a's y los p's:
+as <- numeric()
+ps <- numeric()
+# Replicando:
+for (i in 1:B){
+  # Réplica de los datos:
+  x <- sample(datos.ej2$x, replace = TRUE)
+  N <- length(x)
+  # Función de log-verosimilitud en la réplica:
+  logL <- function(pars){
+    a <- pars[1]
+    p <- pars[2]
+    - (sum(log(gamma(a + x)) + x * log(1 - p) - log(gamma(x+1))) + N * (a * log(p) - log(gamma(a))))
+  }
+  # Buscando los MLE en la réplica:
+  mle.replica <- optim(par = c(1, 0.5), fn = logL)$par
+  # Nuevos valores simulados de estimaciones MLE, basados en la réplica:
+  as[i] <- mle.replica[1]
+  ps[i] <- mle.replica[2]
+}
+```
+
+El valor aproximado de los errores estándar es:
+```{r}
+sd(as)
+sd(ps)
+```
+
+En resumen, tenemos estimaciones $\hat{a}=$ `r round(mle.nbinom[1], 2)` y $\hat{p}=$ `r round(mle.nbinom[2], 2)`, con errores estándar estimados de `r round(sd(as), 2)` y `r round(sd(ps), 2)`.
+
+## Bondad de los ajustes
+
+```{r}
+par(mfrow = c(1, 1), xpd = TRUE)
+
+a <- min(datos.ej2$x)
+b <- max(datos.ej2$x)
+ptos.corte <- (a - 0.5):(b + 0.5)
+diagrama.pois <- hist(datos.ej2$x, breaks = ptos.corte, main = "Negro. Poisson / Rojo. Geométrica / Verde. Binomial Negativa", xlab = "", ylab = "Frecuencia")
+x <- a:b
+num.datos <- length(datos.ej2$x)
+y.1 <- num.datos * dpois(x, lam.estp)
+y.2 <- num.datos * dgeom(x, p.estg)
+y.3 <- num.datos * dnbinom(x, mle.nbinom[1], mle.nbinom[2])
+lines(x, y.1, col=1)
+lines(x, y.2, col=2)
+lines(x, y.3, col=3)
+```
+
+Mirando las gráficas podríamos decir que la distibución que mejor se ajusta a los datos es la Binomial Negativa.
+
+## Contrastes de bondad de ajuste
+
+```{r}
+# Contraste del ajuste Poisson
+observadas <- c(diagrama.pois$counts, 0)
+probs <- c(dpois(a:b, lam.estp), 1 - sum(dpois(a:b, lam.estp)))
+print(test.pois <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+# Contraste del ajuste Geométrica
+observadas <- c(diagrama.pois$counts, 0)
+probs <- c(dgeom(a:b, p.estg), 1 - sum(dgeom(a:b, p.estg)))
+print(test.geom <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+# Contraste del ajuste BN
+observadas <- c(diagrama.pois$counts, 0)
+probs <- c(dnbinom(a:b, mle.nbinom[1], mle.nbinom[2]), 1 - sum(dnbinom(a:b, mle.nbinom[1], mle.nbinom[2])))
+print(test.nbinom <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+```
+
+Como podemos observar en los p-valor de los distintos contrastes, los ajustes Poisson y Geométrica están por encima del percentil 95 mientras que el Binomial Negativo está claramente por debajo de éste. Por tanto, como se intuía en el gráfico, el ajuste Binomial Negativo es el que mejor se ajusta a nuestros datos.
+
+# Ejercicio 3
+
+Dados los datos de la muestra que aparece en *ajuste.ejercicio3.txt*, se pide:
+
+  a. Estimar los parámetros de distribuciones exponencial, Gamma y normal y sus errores estándar.
+  b. Obtener representaciones gráficas (en la misma figura) que permitan valorar la bondad de los ajustes.
+  c. Realizar contrastes de bondad de ajuste para decidir cuáles de los ajustes son aceptables y cuál es el más adecuado para los datos.
+  
+## Estimación de los parámetros y sus errores estándar
+Importamos los datos.
+```{r}
+datos.ej3 <- read.delim("ajusta.ejercicio3.txt")
+summary(datos.ej3)
+```
+### Exponencial
+
+#### Estimación del parámetro
+
+Utilizamos la fórmula conocida del estimador MLE de $\lambda$:
+```{r}
+print(lam.este <- 1 / mean(datos.ej3$x))
+```
+
+#### Error estándar
+
+No tenemos fórmula para el error estándar, así que ahora lo vamos a estimar por remuestreo, como hemos hecho en la binomial negativa. Realizamos $B=200$ estimaciones simuladas a partir del remuestro de los datos y aproximamos el error estandar como la desviación típica de esas estimaciones simuladas:
+```{r}
+B <- 200 
+lams <- numeric()
+for (i in 1:B){
+  x <- sample(datos.ej3$x, replace = TRUE) 
+  lams[i] <- 1 / mean(x) 
+}
+sd(lams)
+```
+
+Así pues, tenemos una estimación MLE de $\lambda$ de `r round(lam.este, 2)`, con un error estandar estimado de `r round(sd(lams), 2)`.
+
+
+### Gamma
+
+#### Estimación de los parámetros
+
+La función de densidad es
+$$
+f(x) = \frac{\lambda^{a} x^{a - 1} e^{-\lambda x}} {\Gamma(a)}
+$$
+
+Por tanto, la función de log-verosimilitud es
+$$
+logL(a, \lambda) = \sum_{i=1}^N ((a-1)\log(x_i) - \lambda x_i) + N(a \log{\lambda} - log(\Gamma(a)))
+$$
+
+Ya sabemos que tenemos que definir el opuesto de esta función para minimizarlo con la función *optim*:
+```{r, warning = FALSE}
+# Opuesto de la log-verosimilitud
+x <- datos.ej3$x
+N <- length(x)
+logL <- function(pars){
+  a <- pars[1]
+  lam <- pars[2]
+  - (sum((a - 1)* log(x) - lam * x) + N * (a * log(lam) - log(gamma(a))))
+}
+# Valores iniciales 'sencillos'
+a0 <- 1
+lam0 <- 1
+# Optimización
+print(mle.gamma <- optim(par = c(a0, lam0), fn = logL)$par)
+```
+
+#### Errores estándar
+
+### Normal
+
+#### Estimación de los parámetros
+```{r}
+mu.est <- mean(datos.ej3$x)
+sigma.est <- sum((datos.ej3$x - mu.est)^2) / length(datos.ej3$x)
+print(c(mu.est, sigma.est))
+```
+
+#### Errores estándar
+Para la estimación de $\mu$ tenemos que el error estándar se aproxima con $s_{N-1} / \sqrt{N}$:
+```{r}
+print(se.mu <- sd(datos.ej3$x) / sqrt(length(datos.ej3$x)))
+```
+
+pero necesitamos estimar el error estándar de $\hat{\sigma}$, y lo hacemos por remuestreo:
+```{r}
+B <- 200 
+sigmas <- numeric()
+
+for (i in 1:B){
+  x <- sample(datos.ej3$x, replace = TRUE) 
+  sigmas[i] <- sum((datos.ej3$x - mean(x))^2) / length(datos.ej3$x)
+}
+sd(sigmas)
+```
+
+Por tanto, estamos ajustando con una distribución normal en la que hemos estimado que $\hat{\mu} =$ `r round(mu.est, 2)` (error estándar `r round(se.mu, 2)`) y que $\hat{\sigma} $ es `r round(sigma.est, 2)` (error estándar `r round(sd(sigmas), 2)`).
+
+
+## Bondad de los ajustes
+
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+#Ajuste Gamma
+hist(datos.ej3$x, freq = FALSE, xlab = "", main = "Histograma y función de densidad", cex.main = 0.5)
+x <- sort(datos.ej3$x)
+y.dens1 <- dexp(x, lam.este) 
+y.dens2 <- dgamma(x, mle.gamma[1], mle.gamma[2])
+y.dens3 <- dnorm(x, mu.est, sigma.est)
+lines(x, y.dens1, col = 2)
+lines(x, y.dens2, col = 3)
+lines(x, y.dens3, col = 4)
+
+y.teor1 <- pexp(x, lam.este)
+y.teor2 <- pgamma(x, mle.gamma[1], mle.gamma[2])
+y.teor3 <- pnorm(x, mu.est, sigma.est)
+y.emp <- (1:length(x)) / length(x)
+plot(x, y.teor1, type = 'l', col = 2, xlab = "", main = "Funciones de distribución empírica y teórica", cex.main = 0.5)
+lines(x, y.teor2, col = 3)
+lines(x, y.teor3, col = 4)
+lines(x, y.emp, type = "S")
+```
+
+
+Leyenda:
+
+ - Rojo: Exponencial
+ - Verde: Gamma
+ - Azul: Normal
+
+Observando las gráficas podemos ver como la distribución Gamma parece ser la que mejor se ajusta a nuestros datos.
+
+## Contrastes de bondad de ajuste
+
+```{r}
+# Exponencial
+print(dist <- ks.test(datos.ej3$x, pexp, lam.este)$statistic)
+B <- 200
+N <- length(datos.ej3$x)
+dists <- numeric(B)
+for (i in 1:B){
+  x <- rexp(N, lam.este)
+  dists[i] <- ks.test(x, pexp, 1 / mean(x))$statistic
+}
+print(p.value <- sum(dist < dists) / B)
+# Gamma
+print(dist <- ks.test(datos.ej3$x, pgamma, mle.gamma[1], mle.gamma[2])$statistic)
+B <- 200
+N <- length(datos.ej3$x)
+dists <- numeric(B)
+for (i in 1:B){
+  x <- rgamma(N, mle.gamma[1], mle.gamma[2])
+  logL <- function(pars){
+    a <- pars[1]
+    lam <- pars[2]
+    - (sum((a - 1)* log(x) - lam * x) + N * (a * log(lam) - log(gamma(a))))
+  }
+  mle.simula <- optim(par = c(1, 1), fn = logL)$par 
+  dists[i] <- ks.test(x, pgamma, mle.simula[1], mle.simula[2])$statistic
+}
+print(p.valueg <- sum(dist < dists) / B)
+#Normal
+print(dist <- ks.test(datos.ej3$x, pnorm, mu.est, sigma.est)$statistic)
+
+B <- 200
+N <- length(datos.ej3$x)
+dists <- numeric(B)
+for (i in 1:B){
+  x <- rnorm(N, mu.est, sigma.est)
+  
+  mu.sim <- mean(x)
+  sigma.sim <- sum((x - mu.sim)^2) / length(x)
+}
+
+print(p.value <- sum(dist < dists) / B)
+```
+
+Como podemos ver, los resultados del contraste de Kolmogorov-Smirnoff nos dan un p-valor de 0 para las distribuciones Exponencial y Normal (lo que implica que son totalmente inaceptables), mientras que para la distribución Gamma el p-valor es de `r round(p.valueg, 2)`, muy por debajo del percentil 95 y por tanto bastante aceptable.
+
+En conclusión, el mejor ajuste para nuestros datos es la distribución Gamma.

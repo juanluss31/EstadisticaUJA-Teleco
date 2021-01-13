@@ -1,0 +1,270 @@
+---
+title: |
+  | Pr&aacute;cticas de Estad&iacute;stica
+  | Ejercicio de la Pr&aacute;ctica 1
+  | Estad&iacute;stica Descriptiva
+author:
+- name: Juan Luis Herreros B&oacute;dalo
+date: Versión `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+    theme: united
+    highlight: tango
+    subtitle: Calidad del aire en Nueva York
+  word_document:
+    toc: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r opciones, include=FALSE}
+# INSTRUCCIONES:
+# 1. Utiliza la plantilla para realizar el ejercicio completando las partes faltantes y todas las demás respuestas
+# 2. Cuando acabes, debes generar el fichero HTML clicando en "Knit"
+```
+
+# Presentación del ejercicio
+
+La hoja de datos *airquality* de R contiene una serie de medidas sobre variables que desciben la calidad del aire en Nueva York entre mayo y septiembre de 1973. Concretamente, hay mediciones del nivel de ozono (en ppb), de la radiación solar (en lang), de la velocidad promedio del viento (en mph) y de la temperatura máxima diaria (en grados Fahrenheit). Podemos ver todos los detalles sobre estos datos si lanzamos a la consola de R *?airquality*. Además, tenemos el día y el mes en que se tomó cada medición.
+
+El objetivo del ejercicio es realizar un análisis descriptivo de la hoja.
+
+En esta ocasión no es necesario importar la hoja porque ya pertenece al entorno de trabajo que, por defecto, se incorpora al lanzar R.
+
+Podemos ver un resumen inicial de todas las variables de esa hoja de datos a continuación:
+
+```{r}
+summary(airquality)
+```
+
+# Un análisis estadístico descriptivo sobre indicadores climáticos del aire en el Nueva York de 1973
+
+## Resumen 
+
+El informe recoge las principales características, desde el punto de vista descriptivo, de 4 indicadores relacionados con el clima y la calidad del aire en Nueva York, medidos entre mayo y septiembre de 1973: cantidad de ozono en el aire, nivel de radiación solar, velocidad del viento y temperatura máxima. 
+
+## Introducción
+
+El clima es un fenómeno complejo sujeto a un alto nivel de incertidumbre y observable a través de múltiples indicadores; algunas de estas variables climáticas están relacionadas con la calidad del aire en las ciudades, como el nivel de ozono. 
+
+El punto de partida de este análisis lo constituye una hoja de datos que recopila 4 de esos indicadores en la ciudad de Nueva York a lo largo de los meses de mayo, junio, julio, agosto y septiembre del año 1973. El objetivo general del trabajo es el de proporcionar una visión global sobre el clima en Nueva York y sobre la calidad de su aire en lo que respecta al nivel de ozono. Como objetivos específicos, proponemos:
+
+1. Realizar un análisis descriptivo básico que incluya la descripción de la distribución de frecuencias, medidas de posición, dispersión y forma, de los cuatro indicadores que ofrece la hoja: nivel de ozono, radiación solar, velocidad del viento y temperatura máxima diaria.
+2. Detectar qué días del año resultaron atípicos en relación con cada uno de los cuatro indicadores.
+
+## Métodología
+
+Como hemos comentado, la hoja recoge mediciones recogidas entre mayo y septiembre de 1973, en la ciudad de Nueva York, de las siguientes variables:
+
+1. Ozone: nivel medio de ozono en partes por billón desde las 13.00 hasta las 15.00 horas en la Isla de Roosevelt.
+2. Solar.R: radiación solar en Langleys, en la frecuencia de banda de 4000???7700 Angstroms desde las 08.00 hasta las 12.00 horas en Central Park.
+3. Wind: velocidad promedio del viento en millas a la hora desde las 7.00 hasta las 10.00 horas en el Aeropuerto de La Guardia.
+4. Temp: temperatura máxima diaria en grados Fahrenheit en el aeropuerto de La Guardia.
+
+Además, dos variables indican el día y el mes de cada medición tomada.
+
+En primer lugar, constataremos que se han recogido medidas todos los días del período de observación. A continuación, para cada una de las cuatro variables de interés, obtendremos:
+
+1. Una representación de su distribución de frecuencias. Dado que se trata de variables continuas, la herramienta será el histograma.
+2. Medida de posición: media y cuartiles.
+3. Medida de dispersión: coeficiente de variación.
+4. Medida de forma: coeficiente de asimetría de Fisher.
+5. Diagrama de caja donde puedan identificarse los días atípicos en cuanto al valor de cada variable.
+
+## Resultados
+
+En primer lugar, a modo de comprobación, obtenemos una tabla de frecuencias absolutas de la variable *mes* para comprobar que se han tomado tantas medidas de cada variable como días tienen los meses entre mayo y septiembre:
+
+```{r, echo = FALSE}
+table(airquality$Month)
+```
+
+Todo parece indicar que sí se tomaron medidas cada día de cada mes
+
+Las 4 figuras que se muestran a continuación correponden a los histogramas de las variables objeto del análisis.
+
+```{r}
+par(mfrow = c(2, 2))
+hist(airquality$Ozone, ylab = "Frecuencias", xlab = "Ozono, en ppb", main = "")
+hist(airquality$Solar.R, ylab = "Frecuencias", xlab = "Radiación solar, en lang", main = "")
+hist(airquality$Wind, ylab = "Frecuencias", xlab = "Velocidad del viento, en mph", main = "")
+hist(airquality$Temp, ylab = "Frecuencias", xlab = "Temperatura máxima diaria, en ºF", main = "")
+```
+
+Por su parte, la tabla siguiente contiene las medidas descriptivas mencionadas.
+
+```{r, include = FALSE}
+# Vamos a calcular el coeficiente de asimetría, por lo que tenemos que definirlo antes como función
+# Dejamos oculto este chunk (include = FALSE) para que no aparezca en el informe final
+coef.asim <- function(datos){
+  # datos debe ser un vector
+  # Eliminamos datos faltantes, si existen
+  x <- datos[is.na(datos) == FALSE]
+  N <- length(x)
+  # Definimos el coeficiente
+  sn <- sqrt(sum((x - mean(x))^2) / N)
+  (sum((x - mean(x))^3) / N) / sd(x)^3
+}
+```
+
+```{r, echo = FALSE}
+# Empezamos por el ozono
+variable1 <- airquality$Ozone 
+medidas1 <- 
+  c(mean(variable1, na.rm = TRUE), # media
+    quantile(variable1, 
+            probs = c(0.25, 0.5, 0.75), na.rm = TRUE), # cuartiles
+    sd(variable1, na.rm = TRUE) / 
+                     mean(variable1, na.rm = TRUE), # CV
+    coef.asim(variable1) # coeficiente de asimetría
+    )
+
+# Radiación solar
+variable2 <- airquality$Solar.R 
+medidas2 <- 
+  c(mean(variable2, na.rm = TRUE), # media
+    quantile(variable2, 
+            probs = c(0.25, 0.5, 0.75), na.rm = TRUE), # cuartiles
+    sd(variable2, na.rm = TRUE) / 
+                     mean(variable2, na.rm = TRUE), # CV
+    coef.asim(variable2) # coeficiente de asimetría
+    )
+
+# Velocidad del viento
+variable3 <- airquality$Wind 
+medidas3 <- 
+  c(mean(variable3, na.rm = TRUE), # media
+    quantile(variable3, 
+            probs = c(0.25, 0.5, 0.75), na.rm = TRUE), # cuartiles
+    sd(variable3, na.rm = TRUE) / 
+                     mean(variable3, na.rm = TRUE), # CV
+    coef.asim(variable3) # coeficiente de asimetría
+    )
+
+# Temperatura
+variable4 <- airquality$Temp 
+medidas4 <- 
+  c(mean(variable4, na.rm = TRUE), # media
+    quantile(variable4, 
+            probs = c(0.25, 0.5, 0.75), na.rm = TRUE), # cuartiles
+    sd(variable4, na.rm = TRUE) / 
+                     mean(variable4, na.rm = TRUE), # CV
+    coef.asim(variable4) # coeficiente de asimetría
+    )
+
+data.frame(row.names = c("Media", "P25", "Me", "P75", "CV", "Coef.asim"),
+           "Ozono" = medidas1,
+           "Radiación solar" = medidas2,
+           "Velocidad del viento" = medidas3,
+           "Temperatura" = medidas4)
+```
+
+## Análisis
+
+Del análisis de las distribuciones de frecuencias podemos destacar los siguientes aspectos:
+
+- En el ozono la mayoría de los días hay niveles bajos, pero por alguna razón hay unos pocos días en que se dispara.
+- En la radiación solar parece pasar justo lo contrario: lo más frecuente son días con valores de radiación entre 250 y 300 lang, pero hay algunos días que destacan por su baja radiación. Quizá simplemente son días nublados.
+- En la velocidad del viento y la temperatura máxima diaria, sin embargo, parece que hay unos valores centrales más frecuentes y luego días de observaciones menores o mayores con las mismas frecuencias.
+
+Estas valoraciones tienen que ver con la forma de las distribuciones de frecuencias, que analizaremos de forma cuantitativa, mediante el coeficiente de asimetría, a continuación.
+
+### Ozono
+
+[En este enlace](https://airnow.gov/index.cfm?action=pubs.aqiguideozone) se considera que niveles de ozono por encima de 100 ppb son peligrosos para grupos de riesgo. El nivel medio observado en nuestros datos está por debajo de los 100, así como el percentil 75, lo que indica que no más del 25 por ciento de los días se padecieron niveles problemáticos de ozono. De hecho, el número de días por encima de 100 ppb fue de  `r sum(airquality$Ozone > 100, na.rm = TRUE)`.
+
+El coeficiente de variación refleja una dispersión moderada, es decir, indica cierta variabilidad de los niveles de ozono a lo largo del período de observación. Por su parte, el coeficiente de asimetría confirma lo que observábamos en el histograma: una fuerte asimetría a la derecha como consecuencia de la existencia de elevados niveles de ozono en algunos días en particular.
+
+### Radiación solar
+
+En [Wikipedia](https://es.wikipedia.org/wiki/Langley) hemos encontrado que:
+
+*La insolación anual en la parte alta de la atmósfera a diferentes latitudes es:
+Para el polo la insolación anual es 133,2 kilolangleys/año. En el ecuador asciende a 320,9 kilolangleys/año, donde el kilolangley=1000 langleys.*
+
+Nuestros datos se refieren a un período de 4 horas. Tomemos como referencia el ecuador, que recibe una radiación promedio en 4 horas de `r 320.9*1000/(365*4)` Langleys. Por tanto, aunque la media de nuestros datos está por debajo, no ocurre así con la mediana: ésta se aproxima bastante al promedio por lo que podemos confirmar que al menos la mitad de los días observados tuvieron una radiación por encima del promedio del ecuador.
+La dispersión, según muestra el coeficiente de variación es moderada-baja, indicando no muchas diferencias en la radiación a lo largo de todo el período de observación. Finalmente, el coeficiente de asimetría es sólo ligeramente negativo, indicando simetría de la distribución de frecuencias: las diferencias observadas con respecto a la radiación media se dan casi en el mismo sentido a la izquierda y a la derecha de ésta.
+
+### Velocidad del viento
+
+Vamos a valorar las medidas de posición en la [escala de Beaufort](https://en.wikipedia.org/wiki/Beaufort_scale):
+
+- La velocidad media del viento se considera brisa suave.
+- El percentil 25 se considera brisa ligera. Por tanto el 25% de los días tuvieron vientos inferiores o iguales a brisa ligera.
+- La mediana es considerada brisa suave, así que el 50% de los días hubo, como máximo, una brisa moderada.
+- El percentil 75 es considerado igualmente brisa suave. Por tanto, no más del 25% de los días hubo vientos por encima de una brisa suave.
+
+La cercanía entre los percentiles 75 y 25 ya indica no excesiva variabilidad en la velocidad del viento, conclusión que se ve ratificada por el coeficiente de variación, del 35.38%. Finalmente, el coeficiente de asimetría indica que la distribución de frecuencias es simétrica a izquierda y derecha de la media.
+
+### Temperatura máxima diaria
+
+Para comparar las medidas descriptivas con algún valor de referencia, vamos a considerar el promedio de los meses de mayo a septiembre en Nueva York que aparecen [en este enlace](https://www.currentresults.com/Weather/New-York/Places/new-york-city-temperatures-by-month-average.php), que es de
+```{r}
+(71+79+84+83+75)/5
+```
+y se refieren al período 1981 a 2010:
+
+- El valor medio de nuestros datos (corresponden a 1973) está ligeramente por debajo, pero no así la mediana.
+- Como cabe esperar, el percentil 25 está por debajo del valor medio entre 1981 y 2010, y el percentil 75 por encima.
+
+Por otra parte, el coeficiente de variación es el menor de todos los observados en las variables analizadas, e indica que el período de mayo a septiembre de 1973 fue moderadamente estable en cuanto a las temperaturas máximas diarias. Finalmente, el coeficiente de asimetría también es cercano a cero, indicando simetría de las frecuencias de valores a izquierda y derecha de la media.
+
+### Análisis de la presencia de datos atípicos
+
+Ahora vamos a identificar datos atípicos en cada una de las variables observadas. En caso de existir datos atípicos, vamos a identificar el día y el mes en que se dio.
+
+### Ozono
+
+Mostramos a continuación el diagrama de caja con la identificación de los valores atípicos:
+
+```{r}
+datos <- airquality[!is.na(airquality$Ozone), ]# Eliminamos los que no tienen valor observado
+bp <- boxplot(datos$Ozone)
+filtro <- datos$Ozone > bp$stats[5] | datos$Ozone < bp$stats[1]
+x <- rep(1.25, sum(filtro))
+y <- datos$Ozone[filtro]
+id <- paste(datos$Day[filtro], "th of month", datos$Month[filtro])
+text(x, y, id)
+```
+
+### Radiación solar
+
+```{r}
+datos <- airquality[!is.na(airquality$Solar.R), ]# Eliminamos los que no tienen valor observado
+bp <- boxplot(datos$Solar.R)
+```
+
+### Velocidad promedio del viento
+
+```{r}
+datos <- airquality[!is.na(airquality$Wind), ]# Eliminamos los que no tienen valor observado
+bp <- boxplot(datos$Wind)
+filtro <- datos$Wind > bp$stats[5] | datos$Wind < bp$stats[1]
+x <- rep(1.25, sum(filtro))
+y <- datos$Wind[filtro]
+id <- paste(datos$Day[filtro], "th of month", datos$Month[filtro])
+text(x, y, id)
+```
+
+### Temperatura máxima diaria
+
+```{r}
+datos <- airquality[!is.na(airquality$Temp), ]# Eliminamos los que no tienen valor observado
+bp <- boxplot(datos$Temp)
+```
+
+### Conclusiones
+
+A modo de conclusión, podemos destacar los siguientes puntos:
+
+-En cuanto al ozono, los niveles oscilan principalmente entre 60 ppb y 20 ppb lo que son valores aceptables. Sin embargo, contamos con 7 días en los que los niveles fueron mayores de 100 ppb y por tanto perjudiciales para grupos de riesgo, destacando el 1 de julio y el 25 de agosto alcanzando 135 ppb y 168 ppb respectivamente. En resumidas cuentas, el nivel de ozono en Nueva York es bastante aceptable.
+
+-Respecto a la radiación solar, la media de `r medidas2[1]` lang se encuentra dentro de lo esperado en la latitud de Nueva York para la época de primavera-verano. Cuenta con días donde la radiación es mayor o menor pero sin datos atípicos, lo que indica que simplemente son días nublados o con ninguna nube en el cielo.
+
+-La velocidad del viento en Nueva York es principalmente brisa suave (sin superar las `r medidas3[4]` mph) encontrándonos con varios días en los que se alcanzan velocidades de hasta 20.7 mph seguramente causadas por pequeños temporales de primavera.
+
+-Por último, la temperatura máxima diaria es la propia del clima en el que se encuentra Nueva York para la época de las mediciones. Destaca la media de `r medidas4[1]` ºF que ,comparándola con la actual de `r (71+79+84+83+75)/5` ºF, se encuentra `r ((71+79+84+83+75)/5)-medidas4[1]` ºF por debajo, lo que podría ser consecuencia directa de los efectos del calentamiento global.

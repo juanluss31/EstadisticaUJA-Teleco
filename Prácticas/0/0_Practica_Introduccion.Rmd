@@ -1,0 +1,324 @@
+---
+title: "Prácticas de Estad&iacute;stica. Pr&aacute;ctica 0"
+author:
+- name: Dr. Antonio Jos&eacute; S&aacute;ez Castillo, Departamento de Estad&iacute;stica e Investigaci&oacute;n Operativa, Escuela Polit&eacute;cnica Superior de Linares, Universidad de Ja&eacute;n
+date: "Versi&oacute;n 1.1. Diciembre de 2017"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Empezando con R
+---
+
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Objetivos
+
+- Instalar R y RStudio.
+- Familiarizarse con el entorno de RStudio.
+- Importar y almacenar datos.
+- Aprender a crear funciones en R.
+
+El objetivo general del presente documento es describir las funciones básicas que te permitan el manejo inicial de R desde RStudio para la realización de las prácticas de la asignatura y como apoyo para las clases teórico-prácticas. No se pretende proporcionar una guía completa del uso de R y RStudio, sino sólo los aspectos más relevantes para abordar paulatinamente un autoaprendizaje con garantías. Existen multitud de documentos online que pueden ayudar a comprender algunas de las cuestiones que aquí se comentan brevemente, y se da por hecho que se utilizarán cuando sea conveniente.
+
+# Introducción a R
+
+## Preliminares sobre R
+
+### R como lenguaje de programación orientado a la Estadística
+
+- R se define como un *lenguaje y entorno de programación* para análisis estadístico y gráfico. 
+- Se trata de un proyecto de *software libre* creado en los años 90 y, hoy en día es, probablemente, el lenguaje más utilizado en investigación por la comunidad estadística. 
+- Gran parte de su potencial se debe a la posibilidad de cargar diferentes *librerías con finalidades específicas*, librerías que son creadas por los propios usuarios de R e incorporadas muy rápidamente al repositorio de librerías públicas.
+- Se distribuye bajo la *licencia GNU GPL* y está disponible para los sistemas operativos Windows, Macintosh, Unix y GNU/Linux.
+
+### Instalación de R
+
+- [En este enlace](http://cran.r-project.org/) encontrarás R disponible para los sistemas operativos más comunes. 
+- Instálalo en tu ordenador personal o tablet compatible teniendo en cuenta su sistema operativo.
+
+Tras la instalación de R podríamos utilizarlo a través de la interfaz que genera, accesible, por ejemplo, a través de los iconos que encontrarás al finalizar. Sin embargo, nosotros vamos a utilizar R a través de otro programa que tiene diversas funcionalidades adicionales y complementarias con R. Ese programa es RStudio.
+
+### RStudio como interfaz de R
+
+- RStudio es una interfaz mucho más amigable desde la que podemos manejar R. 
+- En realidad, es un editor de código especialmente diseñado para interactuar con R de forma sencilla y amigable. 
+- Sin embargo, puede servir también como editor de texto en general, o editor de otros lenguajes de programación. 
+- Se trata también de software libre y de código abierto. 
+- Cuando queramos trabajar con R, lo haremos a través de la interfaz de RStudio.
+
+El aspecto de RStudio es el ves aquí:
+
+![Interfaz de RStudio](RStudio.png)
+
+- Arriba a la izquierda tenemos la ventana con el **editor** de R. En ella, habitualmente escribiremos las distintas instrucciones que deseamos enviar a R. 
+- Abajo a la izquierda tenemos la **consola de R**. Ahí van a aparecer las líneas que nosotros lancemos y las respuestas que R proporcione sobre ellas. También se puede escribir directamente en la consola, sin necesidad de utilizar el editor, pero es más incómodo porque no podemos guardar fácilmente un registro de lo que vamos haciendo. Para lanzar una línea desde la consola sólo hay que usar la tecla Intro.
+- Arriba a la derecha tenemos una ventana que habitualmente incluye el **entorno de trabajo** o workspace y el historial con todas las líneas de código que hemos lanzado. El entorno de trabajo está formado por todos los objetos que hayamos definido en nuestra sesión de R. Más adelante profundizaremos algo más sobre este concepto. Cuando vayamos a cerrar RStudio (y con ello nuestra sesión de R), siempre nos preguntará si deseamos guardar el entorno de trabajo: salvo necesidad expresa, diremos que no.
+- Abajo a la izquierda aparece una ventana con distintas pestañas: una para visualizar los **gráficos** que creemos (Plots), otra con un sencillo **explorador** de ficheros (Files), otra con el menú de **librerías** (Packages) y, por último, una para el manejo de la **ayuda** de R.
+- La organización de las dos ventanas de la derecha, junto con otros aspectos relativos a la apariencia de RStudio, puede cambiarse desde el menú *Tools -> Options*. 
+- Instala RStudio en tu ordenador [desde este enlace](http://www.rstudio.com/).
+
+# Aspectos básicos en R
+
+R es un lenguaje de programación orientado a objetos. Esto implica que R diferencia distintas estructuras (variables, vectores, listas, matrices, hojas de datos, etc.) porque proporciona funciones y métodos específicos para cada una de ellas. 
+
+## Definición de variables
+
+La forma de asignar un valor a una variable es mediante el símbolo '=' o, más usado, '<-'. Por ejemplo, asignamos el valor 25 a la variable *a* de la siguiente forma:
+```{r definicion}
+a <- 25
+```
+
+Ten cuidado porque cuando realizas una definición, R no mostrará nada como resultado, a menos que le pidas que *imprima* esa definición. Por ejemplo, 
+```{r definicionyimprime}
+a <- 25
+print(a)
+```
+
+
+Si el valor asignado es alfanumérico, se especifica entre comillas. Por ejemplo:
+```{r define2}
+sexo <- 'Varón'
+ciudad <- "Linares"
+```
+
+## Vectores
+
+La forma más primitiva de crear un vector es utilizando la función *c()*, que concatena todos los elementos que recibe como argumentos, separados por comas. Por ejemplo:
+```{r concatena}
+c(1,2,3,4,5)
+```
+aunque hay *atajos* que ayudan a escribir ciertos vectores. Por ejemplo
+```{r concatena2}
+1:5
+c(1:5, 2,8,3, 3:-2)
+rep(2, 5)
+```
+
+En el caso de vectores alfanuméricos, los elementos van entrecomillados. Por ejemplo:
+```{r}
+nombres <- c("Pepe", "Manolo", "Luis")
+```
+
+Para acceder a los elementos de un vector se utiliza la notación matricial habitual, indicando la posición del elemento entre corchetes. Por ejemplo:
+```{r posicion}
+nombres[2]
+```
+
+Para ver cómo se realizan operaciones básicas con vectores, observa lo que devuelve la función *demo(plotmath)*:
+
+![Operaciones básicas con vectores en R](plotmath1.jpg)
+
+## Matrices
+
+En R hay varias formas de crear una matriz. Quizá lo más habitual es mediante la función *matrix()*, cuyos argumentos fundamentales son:
+
+  - *data*, vector que contiene los valores que formarán la matriz.
+  - *nrow*, número de filas.
+  - *ncol*, número de columnas.
+  - *byrow*, variable lógica que indica si la matriz se construye por filas o por columnas. Por defecto el valor es *FALSE*, por lo que en principio, si no especificamos lo contrario, las matrices se construyen por columnas.
+  
+Ejemplo:
+```{r matriz}
+X <- matrix(c(1:9), nrow = 3, ncol = 3)
+print(X)
+```
+
+
+Se pueden pegar vectores por filas, mediante *rbind()* o por columnas, mediante *cbind()*:
+```{r pegando}
+rbind(1:3, 4:6)
+cbind(1:3, 4:6)
+```
+
+Al igual que en el caso de los vectores, para seleccionar los elementos de una matriz utilizamos la notación matricial, con la posición del elemento o de los elementos entre corchetes. Ejemplo:
+
+Elemento $(2,3)$ de $X$:
+```{r}
+X[2, 3]
+```
+Tercera fila de $X$:
+```{r}
+X[3, ]
+```
+Segunda columna de $X$:
+```{r}
+X[, 2]
+```
+Filas 2ª y 3ª con columnas 1ª y 2ª:
+```{r}
+X[2:3, 1:2]
+```
+
+## Hoja de datos
+
+En Estadística llamamos **hoja de datos** a una matriz de datos que incluye las variables en columnas y los casos en filas. En R la hoja de datos hereda algunas las propiedades de las matrices, pero incluye algunas más. 
+
+La forma más inmediata de construir una hoja de datos en R es mediante *data.frame()*.
+
+Por ejemplo, podemos transformar la matriz $X$ en una hoja de datos mediante
+```{r} 
+hoja <- data.frame(X)
+```
+
+Ahora podemos añadir nombres a las variables (columnas):
+```{r}
+names(hoja) <- c("Var1", "Var2", "Var3")
+```
+
+También podemos poner nombres a los casos (filas):
+```{r}
+rownames(hoja) <- c("Caso1", "Caso2", "Caso3")
+```
+
+Ahora observa:
+```{r}
+hoja
+```
+```{r}
+names(hoja)
+```
+Una vez que la hoja de datos tiene nombres en sus variables, la forma más cómoda de referirnos a una variable concreta es mediante el símbolo $. Por ejemplo, si queremos referirnos al vector de datos que está dentro de la segunda variable de *hoja*,
+```{r}
+hoja$Var2
+```
+
+## Selección de casos o variables. Filtros
+
+La creación de filtros mediante operadores lógicos permite seleccionar elementos de vectores, matrices u hojas de datos.
+
+Por ejemplo, supongamos que queremos los casos de *hoja* que tienen *Var1* mayor que 1 (es decir, sólo los casos 2 y 3):
+```{r}
+hoja[hoja$Var1 > 1, ]
+```
+
+## Creación de nuevas variables a partir de otras existentes
+
+Es muy fácil crear una nueva variable mediante el uso de las funciones correspondientes. Por ejemplo, añadamos una nueva variable a *hoja* que sea el logaritmo de *Var1*, llamándola *logVar1*:
+```{r}
+hoja$logVar1 <- log(hoja$Var1)
+```
+
+## La ayuda de R
+
+En esta misma práctica inicial, pero sobre todo a partir de la siguiente, vas a utilizar diferentes funciones de R. Conocer cómo trabajan es fundamental para no cometer errores. En ese sentido, independientemente de las explicaciones que se te proporcionen en los cuadernos de prácticas, puedes y debes conocer la ayuda que R proporciona para cada una de ellas.
+
+Para acceder a la ayuda de una función puedes utilizar la pestaña *Help* de la ventana inferior derecha de RStudio o lanzar en la consola *?* seguido del nombre de la función. Por ejemplo, *?matrix*.
+
+Pero desde luego, cuentas con otra ayuda a la hora de encontrar trucos, aclaraciones, ejemplos, etc.: la enorme comunidad de usuarios de R en todo el mundo. En ese sentido, recuerda uno de los principios básicos de nuestro tiempo: lo que no sepas, pregúntaselo a Google.
+
+## Importar o cargar datos
+
+No es nada cómodo, por razones obvias, introducir grandes conjuntos de datos *a mano*. Lo normal es encontrar esos datos en fuentes que ya los contienen codificados y a los que podemos acceder importándolos convenientemente.
+
+Existen, sin embargo decenas de formatos de archivo que pueden contener datos: Excel en sus distintas versiones (.xls o .xlsx), texto (.txt o .csv), SPSS (.sav), dBase (.dbf), etc. No vamos a detallar aquí todos ellos, desde luego, ni vamos a detenernos en explicar cómo los importa R.
+
+RStudio cuenta con un sencillo asistente que permite importar los formatos de Excel, texto, SPSS, SAS y Stata. Podéis utilizarlo: se accede desde la barra de menú *File -> Import Dataset*.
+
+En lo que respecta a nuestro curso, en la mayoría de los casos vas a encontrar que los datos están en un fichero de Excel. Por lo tanto, sólo tendrías que utilizar el asistente para importarlos, especificando, entre otros aspectos, la ruta donde se encuentra ese fichero de Excel. Es así de sencillo: ¡prueba!
+
+El problema lo tenemos si queremos generar un guión de R en el que yo no tenga que usar el asistente una y otra vez cada vez que vuelva sobre él. Una solución sería copiar en nuestro guión el código que genera el asistente para no tener que volver a usarlo, pero el asistente escribe la ruta completa donde tenemos el fichero, y esa ruta depende del ordenador desde el que estamos haciendo las prácticas: por tanto, si copio la ruta, por ejemplo, en mi despacho, y luego lo ejecuto en el aula de informática desde una memoria USB, me dará error. Lo que haremos en los guiones de las prácticas para evitar este problema es fijar la carpeta donde están los datos en la primera línea del guión mediante la función *setwd()*.
+
+Ejemplos:
+```{r importa1}
+
+# Si importo el fichero "contaminante.xlsx" desactivando la casilla "Open data viewer", el asistente genera el siguiente código (eliminando la ruta):
+
+library(readxl)
+contaminante <- read_excel("contaminante.xlsx")
+
+# Si importo el fichero "Hook.xlsx" desactivando la casilla "Open data viewer" y cambiando el nombre por defecto a "Muelle" (eliminando la ruta):
+library(readxl)
+muelle <- read_excel("Hook.xlsx")
+```
+
+R tiene su propio formato para almacenar datos, con extensión *.RData*. Esos ficheros son fácilmente manejables, ya que para cargar los datos que contienen (pueden ser una o varias hojas de datos, incluso otro tipo de estructuras, como vectores, variables, ...) se utiliza simplemente la función *load()*, con la ruta del fichero como argumento:
+```{r}
+# Por ejemplo, cargamos los datos en "instagram.RData" (eliminando la ruta)
+load("instagram.RData")
+```
+
+## Introducción a la programación en R. Funciones en R
+
+Una función, en términos de lenguajes de programación, es un conjunto de órdenes que permite realizar diferentes acciones. Cualquier lenguaje de programación tiene muchas funciones ya definidas, pero sin duda una de las posibilidades más interesantes de cualquier lenguaje es la de crear nuevas funciones que realicen tareas que no estaban definidas. 
+
+Podemos destacar dos elementos fundamentales de una función:
+
+1. Los inputs o argumentos. 
+2. Los resultados de la función o outputs.
+
+En R una función se define asignando a un objeto la palabra *function* seguida de los argumentos, entre paréntesis y separados por comas, y seguida de la orden u órdenes (entre llaves si son varias órdenes) que constituyen las acciones a realizar por la función. Los output se especifican como la última línea o mediante el comando return(). Veamos algún sencillo ejemplo:
+```{r funcion1} 
+# Punto con coordenadas (x, y)
+distancia <- function(x, y) sqrt(x^2 + y^2)
+```
+
+devuelve la distancia al origen del punto $(x,y)$. Por ejemplo,
+```{r}
+distancia(2,3)
+```
+
+```{r}
+# a y b son dos puntos en dos o más coordenadas
+distancia2 <- function(a, b) sqrt(sum(a - b)^2)
+```
+
+devuelve la distancia entre los puntos x e y. O, por ejemplo,
+```{r}
+distancias <- function(a, b){
+  # a y b son puntos en dos o más coordenadas
+  dista_0 <- sqrt(sum(a^2))
+  distb_0 <- sqrt(sum(b^2))
+  dista_b <- sqrt(sum((a - b)^2))
+  c(dista_0, distb_0, dista_b)
+}
+```
+devuelve las distancias de $a$ al origen, de $b$ al origen y de $a$ a $b$.
+
+Obviamente, las funciones pueden incorporar expresiones condicionales (if), operadores lógicos, bucles (for, while), ect. Omitimos detallar esos aspectos aquí, aunque se profundiza sobre ellos en las asignaturas de programación del grado.
+
+# Tipos de documentos en RStudio. Cuadernos (o notebooks) y guiones (o scripts)
+
+De cara a la realización de las prácticas es conveniente que tengamos claro cómo organizar nuestro trabajo. A partir de la práctica siguiente se van a proponer ejercicios que debes realizar convenientemente y, para ello, puedes y debes utilizar las funcionalidades que RStudio pone a tu disposición. 
+
+En este sentido, vamos a comentar aquí aspectos muy básicos del funcionamiento de los dos tipos de documentos de RStudio que pueden ayudarte, los *scripts* o guiones y los *notebook* o cuadernos.
+
+El documento que lees ahora mismo, por ejemplo, ha sido creado como un cuaderno, y permite mezclar texto con código de R. En relación a la edición mediante cuadernos, lo más destacado que debes saber es que:
+
+1. El texto se incorpora como en cualquier otro editor, con las peculiaridades de formato propias, que podrías aprender por tu propia experiencia o buscando ayuda. Yo os proporcionaré plantillas para ayudaros.
+2. El código de R se incorpora en forma de *chunks*. Para incluir una línea de código se utiliza *Insert -> R* y dentro del campo de texto que se genera, introduce to código.
+
+Cuando terminas de editar un cuaderno se debe *compilar*, por ejemplo, mediante la opción *"Knit to HTML"*. Eso va a generar (si no hay errores en el cuaderno) un documento HTML con un aspecto agradable y de fácil lectura, donde se mezclan nuestros comentarios (texto) con el código (opcionalmente, este se puede ocultar) y los resultados de nuestros análisis estadísticos.
+
+Sin embargo, el tipo de documento realmente importante para un programador de R es el guión o *script*. Un **script** es en realidad un documentos de texto que se guarda con extensión *.r* en vez de la habitual *.txt* para que sea reconocido por R y RStudio; un guión sólo contiene código de R, aunque también permite incorporar comentarios, si éstos están identificados como tales. 
+
+En un script incluimos líneas de código para que R las ejecute, de una en una o en bloque, para realizar los análisis estadísticos que nos interesen. La forma de lanzar una línea de código de un script es mediante el botón *Run*, o las combinaciones de letras *Control + R* o *Control + Intro* (salvo en Mac). Si quieres lanzar todo el script entero, puedes utilizar el comando *source()*, que también cuenta con un botón junto a *Run*.
+
+La forma de que R y RStudio identifican los comentarios dentro de un script, distinguiéndolos del código, es mediante el símbolo *#*. Por ejemplo:
+
+```{r script}
+# Esto es un comentario porque empieza por #
+2+2
+rnorm(5)
+# Aquí arriba hay dos líneas de código
+sin(pi)# También se pueden meter comentarios después del código
+```
+
+A modo de resumen sobre los documentos que vas a encontrar, de cada práctica vas a tener:
+
+1. Una guía de la práctica, en formato HTML (extensión *.html*). **Esa guía debes leerla antes de la práctica** y te servirá para estudiar después de la clase. La guía la he generado compilando un cuaderno de R.
+2. Un script de R (extensión *.r*) con todo el código importante de cada práctica, que será lo que yo explicaré con detalle en las clases de prácticas.
+3. Un cuaderno de R (extensión *Rmd*) que será una plantilla para que te ayude a resolver los ejercicios propuestos. Además, el examen de cada práctica se realizará sobre una plantilla similar a ésta, con ejercicios muy similares.
+
+Lo que tú debes generar de cada práctica es un fichero HTML resultado de compilar tu plantilla. Aunque no te lo voy a pedir, me la puedes enseñar. Ten en cuenta que el día del examen de prácticas, en los 50 minutos que dure esa clase, deberás rellenar una plantilla similar y enviarme el HTML resultante de compilarla. 
+
+# Ejercicios propuestos
+
+Al ser ésta una práctica de introducción, no se establece una serie de ejercicios a realizar, pero te sugiero que crees un guión (*File -> New file -> R script*) en el que practiques todo lo que hemos descrito en este cuaderno de la práctica 0, incluyendo comentarios sobre cada cosa que hagas.

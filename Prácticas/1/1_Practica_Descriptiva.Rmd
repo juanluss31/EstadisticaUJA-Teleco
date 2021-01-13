@@ -1,0 +1,281 @@
+---
+title: "Pr&aacute;cticas de Estad&iacute;stica. Pr&aacute;ctica 1"
+author:
+- name: Dr. Antonio Jos&eacute; S&aacute;ez Castillo, Departamento de Estad&iacute;stica e Investigaci&oacute;n Operativa, Escuela Polit&eacute;cnica Superior de Linares, Universidad de Ja&eacute;n
+date: Versi?n `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Estad&iacute;stica Descriptiva
+---
+
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+library(knitr)
+```
+
+# Objetivos
+
+El objetivo general de la pr?ctica es familiarizaros con el manejo de las funciones que permiten realizar un an?lisis estad?stico descriptivo b?sico.
+
+M?s concretamente, podemos destacar los siguientes objetivos espec?ficos:
+
+- Aprender a importar datos y el manejo de variables.
+- Obtener distribuciones de frecuencias en forma de tablas o representaciones gr?ficas.
+- Obtener medidas de posici?n, dispersi?n y forma.
+- Identificar valores at?picos.
+
+# Funciones b?sicas
+
+Funci?n       | Acci?n                                      | Sintaxis b?sica
+------------- | ------------------------------------------- | ---------------------------
+table()       | Distribuci?n de frecuencias absolutas       | table(variable)
+barplot()     | Diagrama de barras                          | barplot(tabla)
+hist()        | Histograma                                  | hist(variable)
+boxplot()     | Diagrama de caja                            | boxplot(variable)
+mean()        | Media                                       | mean(variable)
+sd()          | Desviaci?n t?pica                           | sd(variable)
+quantile()    | Cuantiles                                   | quantile(variable, probs = p)
+
+Ahora vamos a tratar de ilustrar c?mo trabajan estas funciones con el desarrollo de un mini-proyecto. Es importante que te lo tomes *de menos a m?s*, es decir, que al principio te centres en aprender el funcionamiento b?sico, y posteriormente vayas profundizando poco a poco en los detalles de su uso.
+
+# An?lisis de indicadores de consumo dom?stico y de generaci?n de residuos en los municipios de la provincia de Ja?n
+
+## Resumen
+
+El presente documento analiza la tasa de consumo el?ctrico, el consumo de agua y la cantidad de residuos s?lidos urbanos generados por habitante en la provincia de Ja?n en 2008. Se trata de un an?lisis estad?stico de tipo descriptivo que muestra una importante variabilidad en el consumo el?ctrico, probablemente como consecuencia de la inclusi?n del sector industrial en la variable observada. Igualmente, destaca el hallazgo de un patr?n at?pico, bimodal, en la tasa de residuos generados por habitante que podr?a ser objeto de posteriores an?lisis. 
+
+## Introducci?n
+
+La provincia de Ja?n comprende un total de 96 municipios de una tipolog?a muy diversa. La capital es la menos pobladas de Andaluc?a y una de las m?s menos pobladas de Espa?a; a?n as?, es la ciudad m?s importante, en cuanto a poblaci?n de la provincia, muy por encima del resto de municipios, la mayor?a de los cuales pertenecen a un ?mbito rural muy vinculado a la explotaci?n del olivar.
+
+El objetivo general de este trabajo es el de analizar tres indicadores de consumo en el hogar para tratar de describir el patr?n de comportamiento de los municipios y, si existen, anomal?as entre ellos. Como objetivos espec?ficos, destacamos:
+
+1. Realizar un an?lisis descriptivo b?sico de los tres indicadores.
+2. Identificar la presencia de valores at?picos, tratando de explicar el sentido de la anomal?a.
+
+## M?todos
+
+Los datos han sido descargados desde la herramienta **Sistema de informaci?n multiterritoria** del Instituto de Estad?stica y Cartograf?a de Andaluc?a (IECA). Las variables originalmente descargadas se refieren a todos los municipios de la provincia de Ja?n, y recogen:
+
+1. C?digo INE del municipio
+2. Nombre del municipio
+3. Consumo total de energ?a el?ctrica del municipio, en Megavatios/Hora.
+4. Consumo de agua en invierno del munipipio, en metros c?bicos al d?a.
+5. Consumo de agua en verano del municipio, en metros c?bicos al d?a.
+6. Destino de los residuos s?lidos urbanos del municipio, con tres valores posibles: planta de compostaje, vertedero controlado y vertedero incontrolado.
+7. Cantidad total de residuos s?lidos urbanos generados en el municipio, en toneladas m?tricas.
+8. N?mero de habitantes seg?n el padr?n municipal a 31 de diciembre de 2008.
+
+```{r, importando, echo=FALSE}
+# El fichero 'JaenIndicadores.xlsx' contiene la hoja de datos con indicadores. La importamos, llamando a la hoja 'jaen':
+library(readxl)
+jaen <- read_excel("JaenIndicadores.xlsx")
+```
+
+A partir de esas variables hemos obtenido tasas por habitantes de los indicadores deseados. Concretamente:
+
+$$
+\text{Tasa de consumo de agua} = \frac{\text{Consumo en invierno} + \text{Consumo en verano}}{\text{Habitantes}}
+$$
+$$
+\text{Tasa de consumo el?ctrico} = \frac{\text{Consumo total}}{\text{Habitantes}}
+$$
+
+$$
+\text{Tasa de residuos generados} = \frac{\text{Total de residuos generados}}{\text{Habitantes}}
+$$
+```{r, preprocesamiento, echo=FALSE}
+names(jaen)
+jaen$tasa.agua <- (jaen$Consumo.de.agua..Invierno + jaen$Consumo.de.agua..Verano) / jaen$Poblacion
+jaen$tasa.elec <- jaen$Consumo.de.energia.electrica / jaen$Poblacion
+jaen$resid.hab <- jaen$Residuos.solidos.urbanos..Cantidad / jaen$Poblacion
+# Las tres tasas son variables cuantitativas continuas; el destino de los residuos es cualitativa
+```
+
+Las variables que se analizan en el trabajo son precisamente estas tres tasas por habitante y el destino de los residuos s?lidos urbanos.
+
+En el caso del destino de los residuos, dado que se trata de una variable cualitativa, se ha obtenido su distribuci?n de frecuencias, que se plasma en un diagrama de barras. Para las tres tasas, al tratarse de variables de tipo cuantitativo continuo, se proporciona:
+
+1. Una representaci?n de su distribuci?n de frecuencias a trav?s de un histograma.
+2. Medidas de posici?n (media y cuartiles), dispersi?n (coeficiente de variaci?n) y forma (coeficiente de asimetr?a de Fisher).
+3. Una representaci?n en un diagrama de caja para identificar los valores at?picos.
+
+## Resultados
+
+La distribuci?n de frecuencias de la variable sobre el destino de los residuos s?lidos urbanos aparece en la Tabla 1, donde se han incluido tanto las frecuencias absolutas como las relativas, expresadas ?stas en porcentajes. Dicha distribuci?n de frecuencias aparece igualmente representada en el diagrama de barras de la Figura 1.
+
+```{r, tabla1, echo=FALSE}
+tabla.destino <- table(jaen$Residuos.solidos.urbanos..Destino)
+tabla.destino
+# De cara al examen s?lo ser?a necesario facilitar como salida esta versi?n de tabla.destino, pero vamos a 'tunearla' un poco
+# 1. Convertimos la tabla en una hoja de datos:
+hoja.destino <- data.frame(tabla.destino)
+# 2. A?adimos los porcentajes:
+hoja.destino$Porcentaje <- 100 * hoja.destino[, 2] / sum(hoja.destino[, 2])
+# 3. Ponemos nombres a las columnas de esa tabla
+names(hoja.destino) <- c("Destino", "Frecuencia", "Porcentaje")
+# 4. Sacamos 'en pantalla' esa tabla con un aspecto mejorado
+library(knitr)
+kable(hoja.destino, digits = 2, caption = "Tabla 1. Distribuci?n de frecuencias del destino de los residuos s?lidos urbanos")
+```
+
+```{r, figura1, echo=FALSE}
+# barplot(tabla.destino)
+# De nuevo, de cara al examen, ser?a suficiente con esta versi?n inicial, pero nosotros podemos hacerlo mejor:
+
+# 1. ?Cu?ntos colores necesito para las barras? Me lo dice la dimensi?n de la tabla
+n.col <- dim(tabla.destino)
+# 2. Creemos una paleta de colores
+colores <- rainbow(n.col)
+# 3. Ahora el diagrama con colores y ejes bien etiquetados
+barras.destino <- barplot(tabla.destino, col = colores, ylab = "N?mero de municipios", xlab = "Figura 1. Destino de los residuos s?lidos urbanos")
+# 4. A?adamos incluso las frecuencias al diagrama
+text(x = barras.destino, y = tabla.destino, labels = tabla.destino, pos = 3, xpd = TRUE)
+```
+
+Por su parte, en lo que se refiere a las tasas de consumo de agua, el?ctrico y de generaci?n de residuos por habitante, su distribuci?n de frecuencias aparece representada en los histogramas de la Figura 2.
+
+```{r, figura2, echo=FALSE, results='hide'}
+# De cara al examen, ser?a suficiente con
+# hist(jaen$resid.hab)
+# hist(jaen$tasa.agua)
+# hist(jaen$tasa.elec)
+# Pero aqu? vamos a darle 'vidilla' a estos gr?ficos. Es facil:
+
+# Vamos a guardar la figura en un fichero:
+jpeg("figura2.jpg")
+# 1. Primero dividimos la pantalla de una matriz de 1 fila y 3 columnas, una para cada histograma:
+par(mfrow = c(1, 3))
+# 2. Ahora cada uno de los histogramas:
+hist(jaen$tasa.agua, xlab = "Consumo de agua por habitante", ylab = "N?mero de municipios",  col = 'red', main = "")
+hist(jaen$tasa.elec, xlab = "Consumo de electricidad por habitante", ylab = "N?mero de municipios",  col = 'red', main = "")
+hist(jaen$resid.hab, xlab = "Cantidad de residuos por habitante", ylab = "N?mero de municipios",  col = 'red', main = "")
+# 'Cerramos' el fichero 'figura1.jpg'
+dev.off()
+```
+
+![Figura 2. Distribuci?n de frecuencias de las tasas de consumo y generaci?n de residuos](figura2.jpg)
+
+En lo que respecta a las medidas mencionadas de posici?n, dispersi?n y forma, aparecen todas recogidas en la Tabla 2.
+
+```{r, tabla2, echo=FALSE}
+# Vamos a juntar todas las medidas en una tabla. Empezamos:
+# Las medias:
+medias <- c(mean(jaen$tasa.agua, na.rm = TRUE),
+            mean(jaen$tasa.elec, na.rm = TRUE),
+            mean(jaen$resid.hab, na.rm = TRUE))
+# ?Para qu? sirve lo de na.rm = TRUE
+
+# Los cuartiles:
+p25s <- c(quantile(jaen$tasa.agua, probs = 0.25, na.rm = TRUE),
+          quantile(jaen$tasa.elec, probs = 0.25, na.rm = TRUE),
+          quantile(jaen$resid.hab, probs = 0.25, na.rm = TRUE))
+p50s <- c(quantile(jaen$tasa.agua, probs = 0.5, na.rm = TRUE),
+          quantile(jaen$tasa.elec, probs = 0.5, na.rm = TRUE),
+          quantile(jaen$resid.hab, probs = 0.5, na.rm = TRUE))
+p75s <- c(quantile(jaen$tasa.agua, probs = 0.75, na.rm = TRUE),
+          quantile(jaen$tasa.elec, probs = 0.75, na.rm = TRUE),
+          quantile(jaen$resid.hab, probs = 0.75, na.rm = TRUE))
+
+# Coeficientes de variaci?n:
+cvs <- c(sd(jaen$tasa.agua, na.rm = TRUE) / mean(jaen$tasa.agua, na.rm = TRUE),
+         sd(jaen$tasa.elec, na.rm = TRUE) / mean(jaen$tasa.elec, na.rm = TRUE),
+         sd(jaen$resid.hab, na.rm = TRUE) / mean(jaen$resid.hab, na.rm = TRUE))
+
+# Coeficiente de asimetr?a:
+# Primero tenemos que definir una funci?n que calcule el coeficiente, porque R base no la tiene:
+coef.asim <- function(datos){
+  # datos debe ser un vector
+  # Eliminamos datos faltantes, si existen
+  x <- datos[is.na(datos) == FALSE]
+  N <- length(x)
+  # Definimos el coeficiente
+  sn <- sqrt(sum((x - mean(x))^2) / N)
+  (sum((x - mean(x))^3) / N) / sd(x)^3
+}
+
+# Ahora s?:
+asims <- c(coef.asim(jaen$tasa.agua), coef.asim(jaen$tasa.elec), coef.asim(jaen$resid.hab))
+
+# Ya que lo tenemos todo, lo ponemos junto en una hoja de datos:
+medidas <- data.frame(
+  row.names = c("Tasa de consumo de agua", "Tasa de consumo el?ctrico", "Tasa de generaci?n de residuos"),
+  "Media" = medias,
+  "P25" = p25s,
+  "Mediana" = p50s,
+  "P75" = p75s,
+  "CVs" = cvs,
+  "Coef.asimetr?a" = asims)
+
+# La sacamos con buen aspecto
+kable(medidas, digits = 2, caption = "Tabla 2. Medidas estad?sticas descriptivas")
+```
+
+Finalmente, como se menciona en la metodolog?a, utilizamos los diagramas de caja de la Figura 3 para identificar valores at?picos.
+
+```{r, cajas, echo=FALSE, results='hide'}
+jpeg("cajas.jpg")
+
+par(mfrow = c(1, 3), xpd = TRUE)
+
+caja.agua <- boxplot(jaen$tasa.agua, ylab = "Tasa de consumo de agua")
+# Ahora vamos a 'etiquetar' cada valor at?pico con el nombre del municipio al que corresponde:
+# El vector caja.agua$stats tiene 5 elementos: el bigote inferior, el P25, la mediana, el P75 y el bigote superior. Por tanto, el filtro que define los valores at?picos es
+filtro.agua <- jaen$tasa.agua < caja.agua$stats[1] | jaen$tasa.agua > caja.agua$stats[5]
+# El n?mero de at?picos es
+n.atip.agua <- sum(filtro.agua, na.rm = TRUE)
+# Vamos a introducir el nombre de los municipios at?picos en el diagrama
+# Coordenadas 'x' de los at?picos
+x.atip.agua <- rep(1, n.atip.agua)# La caja de la tasa de agua est? en x=1
+# Coordenadas 'y' de los at?picos
+y.atip.agua <- jaen$tasa.agua[filtro.agua]
+# Nombres de los at?picos
+nom.atip.agua <- jaen$Municipio[filtro.agua]
+# Finalmente, escribamos donde corresponde
+text(x.atip.agua, y.atip.agua, nom.atip.agua, pos = 4)
+
+caja.elec <- boxplot(jaen$tasa.elec, ylab = "Tasa de consumo el?ctrico")
+filtro.elec <- jaen$tasa.elec < caja.elec$stats[1] | jaen$tasa.elec > caja.elec$stats[5]
+n.atip.elec <- sum(filtro.elec, na.rm = TRUE)
+x.atip.elec <- rep(1, n.atip.elec)# La caja de la tasa el?ctrica est? en x=1
+y.atip.elec <- jaen$tasa.elec[filtro.elec]
+nom.atip.elec <- jaen$Municipio[filtro.elec]
+text(x.atip.elec, y.atip.elec, nom.atip.elec, pos = 4)
+
+caja.res <- boxplot(jaen$resid.hab, ylab = "Tasa de generaci?n de residuos")
+filtro.res <- jaen$resid.hab < caja.res$stats[1] | jaen$resid.hab > caja.res$stats[5]
+n.atip.res <- sum(filtro.res, na.rm = TRUE)
+x.atip.res <- rep(1, n.atip.res)# La caja de la tasa de residuos est? en x=1
+y.atip.res <- jaen$resid.hab[filtro.res]
+nom.atip.res <- jaen$Municipio[filtro.res]
+text(x.atip.res, y.atip.res, nom.atip.res, pos = 4)
+
+dev.off()
+```
+
+![Figura 3. Diagramas de caja con valores at?picos en las tasas de consumo y generaci?n de residuos](cajas.jpg)
+
+## An?lisis
+
+En lo que se refiere al destino de los residuos s?lidos urbanos, llama la atenci?n que s?lo la cuarta parte de los municipios utilizan plantas de compostaje para su tratamiento. Incluso sorprende la presencia de 11 municipios que utilizan vertederos no controlados para su almacenaje: `r jaen$Municipio[jaen$Residuos.solidos.urbanos..Destino == "Vertedero incontrolado"]`. 
+
+El patr?n de comportamiento de los municipios de la provincia en lo relativo a las dos tasas de consumo y a la generaci?n de residuos es muy heterog?neo, tal y como se refleja en la Figura 2 y denota la Tabla 1:
+
+1. La mayor?a de los municipios de la provincia (m?s del 50% a tenor del valor de los percentiles 25 y 75) se sit?an en un consumo de agua por habitante de entre 0.4 y 0.6 metros c?bicos por habitante y d?a, con una variabilidad entre municipios moderada (CV = 0.26). La forma de la distribuci?n de frecuencias, claramente asim?trica a la derecha, indica la presencia de municipios donde el consumo por habitante es mucho mayor. De hecho, el diagrama de caja de la Figura 3 correspondiente al consumo de agua indica que muestra c?mo municipios como Aldeaquemada, Vilches o La Iruela tienen un consumo extremadamente at?pico por su alto valor, mientras que otros, como Torres de Albanchez o Beas de Segura destacan por todo lo contrario. En ese sentido, siendo todos ellos municipios peque?os y de situados en comarcas de sierra, no es f?cil encontrar un motivo que explique las diferencias.
+2. Los datos sobre el consumo el?ctrico por habitante destacan por su fuerte asimetr?a a la derecha (Coeficiente de asimetr?a = 2.05). Frente a una mayor?a de municipios con un consumo promedio en torno a 2Kw/h por habitante, existe un grupo reducido de municipios de un consumo mucho mayor, en el que destacan Villanueva de la Reina, Meng?bar, Martos, Guarrom?s y Lupi?n, municipios at?picos. Esa fuerte asimetr?a es la causante de la elevada variabilidad (CV = 3%).
+3. En el caso de la cantidad promedio de residuos generados por habitante, el histograma muestra que los datos ocultan la presencia de dos subpoblaciones. Si observ?ramos los datos separados entre municipios de promedio por encima y por debajo de 0.275, ambos grupos presentar?an una forma t?pica de distribuci?n sim?trica. Sin embargo, la uni?n de esos dos grupos, el primero en torno a un valor modal de 0.22, y el segundo en torno a 0.31, da como resultado una clara asimetr?a a la derecha (1.39), a pesar de que la variabilidad relativa es la menor de los tres indicadores. Cabe destacar que, como se muestra en la Figura 3, son los municipios de mayor tama?o de la provincia los que, en su mayor?a, conforman esa subpoblaci?n donde el promedio de generaci?n de residuos es mayor.
+
+## Conclusiones
+
+La primera conclusi?n que queremos destacar es que algunos de los indicadores reflejan diferencias entre los municipios m?s poblados frente a los menos habitados: son municipios peque?os los que depositan los residuos en vertederos incontrolados y son municipios grandes los que resultan at?picos frente al resto por la cantidad promedio de residuos que generan.
+
+No hemos logrado comprender la estructura que muestra la distribuci?n de la variable sobre el consumo promedio de agua. La presencia de municipios at?picos tanto por su elevado como por su reducido consumo promedio no nos ha permitido detectar ning?n patr?n que explique el por qu? de dicha variabilidad. Ser?a necesario un an?lisis m?s profundo y con un conocimiento m?s exhaustivo del tema para lograr arrojar luz sobre ello.
+
+Sin embargo, en el caso del consumo promedio de energ?a el?ctrica es la presencia de los datos at?picos la que nos permite comprender qu? provoca esa distribuci?n en la que la mayor?a de municipios se concentra en torno a 2 Kw/h por habitante, pero otros cuantos se sit?a en valores muy superiores. Villanueva de la Reina es un municipio peque?o en cuyo t?rmino municipal se situaban (y se sit?an a?n hoy) enj 2008, en plena burbuja inmobiliaria, las dos plantas de la empresa de fabricaci?n de materiales de construcci?n MALPESA; en M?ng?bar, de tama?o peque?o - mediano, se halla la importante f?brica de papel Smurfit Kappa; en Guarrom?n destaca un enorme pol?gono industrial situado muy cerca de Linares; finalmente, Martos cuenta con la importante factor?a de la multinacional Valeo. Lo que claramente dejan traslucir esto es que la variable no s?lo est? contabilizando el consumo promedio de los hogares, sino que tambi?n suma el consumo industrial, lo que se refleja sobre todo en los municipios m?s peque?os.

@@ -1,0 +1,508 @@
+﻿---
+title: "Pr&aacute;cticas de Estad&iacute;stica. Pr&aacute;ctica 4"
+author:
+- name: Dr. Antonio Jos&eacute; S&aacute;ez Castillo, Departamento de Estad&iacute;stica e Investigaci&oacute;n Operativa, Escuela Polit&eacute;cnica Superior de Linares, Universidad de Ja&eacute;n
+date: "Versi&oacute;n 1.0. Junio de 2017"
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Contraste de hipótesis paramétricas
+---
+
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Objetivo
+
+En este caso el objetivo es claro: aprender a realizar contrastes paramétricos sobre medias, varianzas y proporciones con R.
+
+# Principales funciones involucradas
+
+Función        | Acción                                        | Sintaxis básica
+-------------  | --------------------------------------------- | ---------------------------
+shapiro.test() | Contrasta si unos datos son normales          | shapiro.test(datos)
+prop.test()    | Contrastes sobre proporciones                 | prop.test(x, n, p, alternative) ó prop.test(tabla, alternative)
+t.test()       | Contrastes sobre medias                       | t.test(datos, mu, alternative) ó t.test(x, y, mu, alternative, paired)
+var.test()     | Contraste de igualdad de varianzas            | var.test(x, y, alternative)
+aov()          | Análisis de la varianza                       | aov(y ~ x, data)
+
+# Preliminares
+
+## Conceptos básicos
+
+Creo que a estas alturas estaremos todos convencidos de que no tiene sentido tratar de hacer las prácticas sin entender antes la teoría. Por eso vamos a empezar recordando qué es lo mínimo que tenemos que comprender a la hora de plantear un contraste de hipótesis:
+
+1. **Hipótesis nula y alternativa**. Debes saber plantear una hipótesis sobre un parámetro y diferenciar la hipótesis nula y la alternativa.
+2. **p-valor**. Recuerda la regla básica: *si el p-valor es inferior al nivel de significación exigido (casi siempre 0.05), se rechaza la hipótesis nula en favor de la alternativa*.
+
+En cuanto a la hipótesis alternativa, recuerda que tenemos tres posibilidades:
+
+a. A la derecha: en R se dirá **greater**.
+b. A la izquierda: en R se dirá **less**.
+c. Bilateral: en R se dirá **two.sided**.
+
+## Test de normalidad de Shapiro-Wilk
+
+Ya sabéis que algunos de los contrastes que vamos a utilizar pueden tener entre sus requisitos el que los datos sigan una distribución normal. El test de Shapiro-Wilk sirve precisamente para eso.
+
+En el Test de Shapiro-Wilk se plantea como hipótesis nula que una muestra $x_1, ..., x_N$ proviene de una población normal, mientras que la alternativa es que no proviene de una distribución normal. Se considera uno de los test más potentes para el contraste de normalidad, sobre todo para muestras pequeñas ($N<50$).
+
+Siendo la hipótesis nula que la población está distribuida normalmente, si el p-valor es menor a $\alpha$, la hipótesis nula es rechazada y se concluye que los datos no vienen de una distribución normal. Si, por el contrario, el p-valor es mayor a $\alpha$, no se rechaza la hipótesis y se concluye que los datos siguen una distribución normal.
+
+Por ejemplo, vamos a simular unos datos que proceden de una normal y plantear un contraste de normalidad:
+```{r}
+set.seed(1)# Fijo la semilla para que siempre nos salga lo mismo
+x <- rnorm(40)
+shapiro.test(x)
+```
+
+El p-valor avala la conclusión de que es admisible pensar que los datos provienen de una normal.
+
+Por el contrario, vamos a simular unos datos que no proceden de una normal y contrastar que sí lo hacen:
+```{r}
+set.seed(1)
+x <- rexp(40)
+shapiro.test(x)
+```
+
+El p-valor indica que debemos rechazar la hipótesis de que los datos proceden de una normal.
+
+# Contrastes sobre una proporción
+
+Como siempre, vamos a trabajar con ejemplos. En concreto, en este caso consideramos los datos del artículo *Refinement of Gravimetric Geoid Using GPS and Leveling Data* (W. Thurston, en Journal of Surveing Engineering, 2000:27-56) que presenta un método para medir las alturas ortométricas por encima del nivel del mar. 
+
+El autor consiguió una muestra de 1225 puntos en los que se midió la altura por su métido, y comprobó que 926 dieron resultados que están *dentro del espíritu de la clase C nivelando los límites de tolerancia*, es decir, y para que nos entendamos, que son válidos.
+
+Por otra parte, el autor tenía una referencia previa de un porcentaje de válidos del 75%, y quería demostrar que su método mejora ese porcentaje.
+
+¿Puede concluir que, en efecto, su método supera el 75% de mediciones válidas?
+
+Tenemos por tanto que contrastar 
+$$H_0: p=0.75$$
+frente a 
+$$H_1: p>0.75$$
+donde $p$ es la probabilidad de obtener resultados dentro de los límites de tolerancia.
+
+Antes de hacer nada hay que plantearse si tenemos los requisitos nevesarios para plantear el contraste, que en este caso es un contraste $\chi^2$: se nos requieren al menos 5 éxitos y 5 fracasos, requisito que se cumple de sobra.
+
+La información que tenemos que proporcionar para hacer el test es:
+
+1. El número de éxitos, *x*, entendiendo como *éxito*, en este caso, las mediciones válidas.
+2. El número de experimentos, *n*.
+3. La hipótesis nula, $p=0.75$.
+4. La dirección de la hipótesis alternativa, en este caso a la derecha.
+
+El test en R se realiza de la siguiente manera:
+```{r}
+prop.test(x = 926, n = 1225, p = 0.75, alternative = "greater")
+```
+
+Observemos que la salida proporciona bastante información (valor del estadístico, intervalo de confianza, ...). Por ejemplo, proporciona la estimación puntual, $\hat{p} = 0.756$, que indica que en la muestra el porcentaje de éxito sí que supera el 75%. Pero centrémonos en el p-valor: dado que es superior a 0.05 (p-value = 0.328), no podemos rechazar $H_0$ en favor de $H_1$, es decir, no podemos concluir que el método produzca resultados válidos en más del 75% de las observaciones. Alguien que no sepa Estadística podría haberse dejado llevar por el hecho de que la estimación muestral es del 75.59%, sin ser consciente de que ese dato no permite concluir que más allá de esta muestra, el porcentaje poblacional sea superior al 75%. 
+
+Viendo el intervalo de confianza a la derecha para la proporción, *(0.7347635 1)*, podemos llegar a la misma conclusión, porque 0.75 pertenece a él.
+
+# Contraste sobre dos proporciones
+
+El artículo *The analysis of unbalanced cross classifications (with discussion)* (S. Quine, quoted in Aitkin, M., Journal of the Royal Statistical Society series A 141, 195-223, 1978) presenta información sobre el género, el origen étnico (aborigen o no aborigen) y otras variables en una muestra de 146 niños australianos escolarizados.
+
+Lo que nos planteamos aquí es contrastar si la proporción de varones dentro del colectivo de aborígenes escolarizados es inferior a la proporción de varones dentro del colectivo no aborigen escolarizado. 
+
+Si llamamos $pv_a$ a la proporción de varones dentro de los aborígenes escolarizados y $pv_{na}$ a la proporción de varones dentro de los no aborígenes escolarizados, la hipótesis nula es 
+$$
+H_0: pv_a = pv_{na},
+$$
+y la alternativa,
+$$
+H_1: pv_a < pv_{na}.
+$$
+
+La función *prop.test()* necesita una tabla o matriz como la siguiente:
+
+Grupo          | Éxitos                               | Fracasos
+-------------  | ------------------------------------ | ---------------------------
+Primer grupo   | Número de éxitos en el primer grupo  | Número de fracasos en el segundo grupo
+Segundo grupo  | Número de éxitos en el segundo grupo | Número de fracasos en el segundo grupo
+
+En nuestro ejemplo sería:
+
+Grupo          | Varones                              | Mujeres
+-------------  | ------------------------------------ | ---------------------------
+Aborígenes     | Número de varones aborígenes         | Número de mujeres aborígenes
+No aborígenes  | Número de varones no aborígenes      | Número de mujeres no aborígenes
+
+Los datos pertenecen a una librería llamada *MASS*. Podemos cargarlos como sigue a continuación, ofreciendo también un resumen:
+```{r}
+library(MASS)
+data(quine)
+summary(quine)
+```
+
+Teniendo, como tenemos, los datos en una hoja de datos, podemos obtener la matriz de éxitos y fracasos con la función *table()* que hasta ahora sólo habíamos utilizado para una variable:
+```{r}
+table(quine$Eth, quine$Sex)
+```
+
+¡Ups! No nos vale tal cual porque necesitamos que la primera columna sean los varones, no las mujeres. Tuneémosla:
+
+```{r}
+print(tabla <- table(quine$Eth, quine$Sex)[, 2:1])
+```
+
+Ya podemos realizar el contraste:
+```{r}
+prop.test(tabla, alternative = 'less')
+```
+
+Como se aprecia, en la muestra de aborígenes hay un 44.93% de varones, mientras que en la de no aborígenes hay un 45.45%. Siendo menor, no es lo suficientemente menor para que podamos rechazar la hipótesis nula en favor de la alternativa (p-valor = 0.5). La conclusión por tanto es que no hay evidencias de que la proporción de varones en la población escolarizada sea inferior en los aborígenes que en los no aborígenes.
+
+# Contraste sobre una media
+
+Los datos que aparecen en el fichero *KentStateUniversityData.txt* se refieren a diferentes variables recopiladas sobre una muestra de estudiantes universitarios estadounidenses (mayores de 20 años). En realidad, la muestra es simulada, pero nos sirve para nuestro ejemplo. Toda la información sobre estos datos puede encontrarse en [este enlace](http://libguides.library.kent.edu/SPSS/OneSampletTest).
+
+Importamos los datos y echamos un vistazo a las variables que contiene:
+```{r}
+kent <- read.delim("KentStateUniversityData.txt")
+summary(kent)
+```
+
+
+En particular, vamos a fijarnos en la variable *altura (Height)*. Según los registros de la CDC (Centers for Disease Control and Prevention), la altura media de los adultos de 20 o más años en Estados Unidos es de 66.5 pulgadas (69.3 pulgadas para hombres y 63.8 para mujeres). Vamos a contrastar si la altura media de los jóvenes universitarios, población de donde procede nuestra muestra, difiere significativamente del valor de referencia para toda la población, 66.5 pulgadas.
+
+Si notamos $\mu$ a la altura media de la población de los jóvenes universitarios en Estados Unidos, lo que planteamos es el contraste de la hipótesis
+$$
+H_0: \mu = 66.5
+$$
+frente a la alternativa
+$$
+H_1: \mu \neq 66.5
+$$
+
+Si queremos abordar este contraste como un contraste sobre la media de una población, tenemos que pararnos a comprobar los requisitos. En este caso, la muestra es de 435 jóvenes (en realidad son sólo 408, porque hay valores faltantes), muchos más de los 30 casos mínimos requeridos. Si hubiera habido menos de 30 casos, habríamos tenido que valorar si estos datos proceden de una distribución normal, mediante el test de Shapiro-Wilk:
+```{r}
+shapiro.test(kent$Height)
+```
+
+El test permite aceptar que proceden de una distribución normal. Como acabamos de decir, no era necesario, porque tenemos más de 30 datos.
+
+Vamos a realizar el contraste:
+```{r}
+t.test(kent$Height, mu = 66.5, alternative = "two.sided")
+```
+
+Observemos que el p-valor es bajísimo, indicando que debemos rechazar la hipótesis nula en favor de la alternativa, concluyendo que hay diferencias estadísticamente significativas entre la altura media de los jóvenes universitarios con respecto al del conjunto de la población de Estados Unidos.
+
+# Contraste de comparación de medias en poblaciones independientes
+
+Lo primero de todo es recordar que este contraste de comparación de medias, estrictamente hablando, es en realidad un contraste sobre una diferencia de medias. Eso quiere decir que:
+
+- La hipótesis nula $H_0: \mu_1 = \mu_2$ es en realidad $H_0: \mu_1 - \mu_2 = 0$.
+- La hipótesis alternativa $H_1: \mu_1 \neq \mu_2$ es en realidad $H_1: \mu_1 - \mu_2 \neq 0$.
+- La hipótesis alternativa $H_1: \mu_1 > \mu_2$ es en realidad $H_1: \mu_1 - \mu_2 > 0$.
+- La hipótesis alternativa $H_1: \mu_1 < \mu_2$ es en realidad $H_1: \mu_1 - \mu_2 < 0$.
+
+Fijaros que es muy importante aclarar de antemano cuál es la que consideramos *población 1* y cuál es la *población 2*.
+
+Vamos a utilizar la misma base de datos para tratar de confirmar una sospecha. Creemos que los estudiantes que practican un deporte, considerados *atletas (Athlete)* en la muestra son, en media, más altos que los que no lo practican. Echemos un vistazo a esa variable *Athlete*:
+```{r}
+table(kent$Athlete)
+```
+
+Tenemos datos de sobra en los dos grupos para poder comparar las medias. 
+
+Vamos a notar $\mu_{ath}$ a la altura media de jóvenes universitarios que practican un deporte, y $\mu_{no.ath}$ a la altura media de los que no lo practican. Las hipótesis serían
+$$
+H_0: \mu_{ath} = \mu_{no.ath}
+$$
+frente a 
+$$
+H_1: \mu_{ath} > \mu_{no.ath}
+$$
+
+Como hemos dicho, hay que tener en cuenta que el contraste realmente se realiza sobre la diferencia de las medias, por lo que podemos re-enunciarlo como
+$$
+H_0: \mu_{ath} - \mu_{no.ath} = 0
+$$
+frente a 
+$$
+H_1: \mu_{ath} - \mu_{no.ath} > 0
+$$
+
+Realizamos el contraste de la siguiente manera:
+```{r}
+x <- kent$Height[kent$Athlete == 1]
+y <- kent$Height[kent$Athlete == 0]
+t.test(x, y, alternative = "greater", mu = 0)
+```
+
+El argumento *mu = 0* establece la diferencia media que se plantea en la $H_0$. 
+
+Lo que observamos es que, en efecto, dado que el p-valor es inferior a 0.05, se rechaza la hipótesis nula en favor de la alternativa y, por tanto, se confirma que la altura media de quienes hacen deporte es superior a la de quienes no lo hacen.
+
+# Contraste de comparación de medias en poblaciones relacionadas (apareadas o emparejadas)
+
+Antes de comenzar, recordemos que, como habéis visto en clase de teoría, el contraste de comparación de medias en poblaciones relacionadas en realidad es un simple contraste sobre una media, la media de las diferencias.
+
+Es decir, si tenemos las variables $X$ e $Y$, de medias $\mu_1$ y $\mu_2$, que están relacionadas de manera que cada dato muestral $x_i$ va asociado a otro dato muestral $y_i$, la comparación de las medias de $X$ e $Y$ puede hacerse a través de un contraste de hipótesis sobre $D=X-Y$, cuya media es $\mu_D = \mu_1 - \mu_2$. De hecho,
+
+- La hipótesis nula $H_0: \mu_1 = \mu_2$ es en realidad $H_0: \mu_D = 0$.
+- La hipótesis alternativa $H_1: \mu_1 \neq \mu_2$ es en realidad $H_1: \mu_D \neq 0$.
+- La hipótesis alternativa $H_1: \mu_1 > \mu_2$ es en realidad $H_1: \mu_D > 0$.
+- La hipótesis alternativa $H_1: \mu_1 < \mu_2$ es en realidad $H_1: \mu_D < 0$.
+
+Por lo tanto, el contraste de comparación de medias en poblaciones relacionadas en R se puede hacer como un contraste sobre una sola media, sin más que definir la variable $D=X-Y$.
+
+Sin embargo, se puede hacer específicamente sin necesidad de definir la variable diferencia, como el contraste de comparación de medias en poblaciones independientes, pero añadiendo el argumento *paired = TRUE*. Veamos un ejemplo.
+
+El libro *Statistics: The Exploration & Analysis of Data* (6ª edición, p. 505) habla del estudio *Bone mass is recovered from lactation to postweaning in adolescent mothers with low calcium intakes*. En este estudio se midió el contenido mineral óseo total del cuerpo (TBBMC, por *total-body bone mineral content*) de madres jóvenes durante la lactancia y acabada la lactancia. El libro plantea que, a pesar de la pérdida de calcio debido a la lactancia y a una baja ingesta de calcio, las madres ganaron más de 25 gramos de contenido óseo mineral en promedio. 
+
+Hemos conseguido los datos de [esta web](https://heuristically.wordpress.com/2011/09/28/paired-sample-t-test-in-r/):
+```{r}
+# TBBMC durante la lactancia
+x.durante <- c(1928, 2549, 2825, 1924, 1628, 2175, 2114, 2621, 1843, 2541)
+# TBBMC después de la lactancia
+x.despues <- c(2126, 2885, 2895, 1942, 1750, 2184, 2164, 2626, 2006, 2627)
+```
+
+Vamos a realizar el contraste de las dos formas que hemos comentado, pero antes de empezar, fijaros que tenemos menos de 30 casos, así que hay que realizar un contraste de normalidad para comprobar que es admisible pensar que las diferencias sigan una distribución normal, mediante el test de Shapiro-Wilk:
+```{r}
+shapiro.test(x.despues - x.durante)
+```
+
+Afortunadamente el p-valor superior a 0.05 nos permite inferir que la hipótesis de normalidad de los datos (de la diferencia de TBBMC) es admisible.
+
+Ahora, planteemos el contraste:
+$$
+H_0: \mu_{despues} - \mu_{durante} = 25
+$$
+frente a la alternativa
+$$
+H_1: \mu_{despues} - \mu_{durante} > 25
+$$
+
+La primera forma de hacerlo es como un contraste sobre la diferencia:
+```{r}
+dif <- x.despues - x.durante
+t.test(dif, mu = 25, alternative = "greater")
+```
+
+La segunda, como una comparación de poblaciones relacionadas:
+```{r}
+t.test(x = x.despues, y = x.durante, mu = 25, alternative = "greater", paired = TRUE)
+```
+
+Los resultados son idénticos y permiten rechazar la hipótesis nula en favor de la alternativa, confirmando que la ganancia promedio de mineral óseo es superior a 25 gramos.
+
+# Contraste sobre una varianza
+
+Sorprendentemente R no tiene en su *núcleo* ninguna función predefinida para realizar el contraste sobre una varianza. Que yo conozca, existe la función *sigma.test* de la librería *TeachingDemos*, pero nosotros vamos a crear la función que facilite el contraste sin necesidad de depender de una librería.
+
+Vamos a tratar de definir una función parecida en cuanto a sus entradas y a sus salidas a la función *t.test*:
+```{r}
+# Evitamos llamar a la función var.test porque ese es el nobre que tiene la función que compara dos varianzas
+var1.test <- function(datos, sigma = NULL, var = NULL, alternative){
+  # En la hipótesis nula podemos especificar la desviación típica
+  if (!is.null(sigma)) var0 <- sigma^2
+  # O la varianza directamente
+  else var0 <- var
+  # Definimos el estadístico
+  chi2 <- sum((datos - mean(datos))^2) / var0
+  # Obtenemos el p-valor
+  if (alternative == "two.sided") p.value <- 2 * min(pchisq(chi2, length(datos) - 1), 1 - pchisq(chi2, length(datos) - 1))
+  if (alternative == "less") p.value <- pchisq(chi2, length(datos) - 1)
+  if (alternative == "greater") p.value <- 1 - pchisq(chi2, length(datos) - 1)
+  return(list(statistic = chi2, p.value = p.value))
+}
+```
+
+Vamos a aplicar la función para un contraste sobre una desviación típica sobre un supuesto práctivo. Según aparece en [este enlace](http://www.fym.es/NR/rdonlyres/251ED9E7-E52B-4F36-86E6-9DB4A440633E/0/...) de la empresa Cemosa Ingeniería y Control, para que un hormigón reciba un distintivo de garantía de calidad adicional, la desviación típica de su resistencia tiene que ser inferior a determinados valores límite en función de la resistencia de dicho hormigón.
+
+Por ejemplo, para un hormigón con resistencia entre 30 y 35 N/mm2 se establece como requisito que la desviación típica debe ser inferior a 3.25 N/mm2.
+
+El ingeniero responsable de la producción de hormigón de una planta quiere probar que ese requisito se cumple en el hormigón que dicha planta produce, para lo que obtiene los valores de la resistencia de 35 muestras de hormigón entre 30 y 35 N/mm2, que son los datos que aparecen en el fichero *hormigon.txt*.
+
+A la luz de esos datos, ¿puede el ingeniero concluir que se cumplen los requisitos para que a ese hormigón se le otorgue el distintivo de garantía de calidad adicional?
+
+En primer lugar, si deseamos realizar un contraste sobre la desviación típica o la varianza es IMPRESCINDIBLE que comprobemos que es admisible la hipótesis de que los datos proceden de una distribución normal:
+```{r}
+hormigon <- read.delim("hormigon.txt")
+shapiro.test(hormigon$resistencia)
+```
+
+Como vemos, el p-valor 0.5745 indica que podemos aceptar la hipótesis de que los datos proceden de una distribución normal, requisito necesario para la realización de nuestro contraste sobre la desviación típica.
+
+Nuestras hipótesis son:
+$$
+H_0: \sigma = 3.25
+$$
+frente a 
+$$
+H_1: \sigma < 3.25
+$$
+
+Realizamos el contraste:
+```{r}
+var1.test(hormigon$resistencia, sigma = 3.25, alternative = "less")
+```
+
+Visto el p-valor, no podemos rechazar la hipótesis nula en favor de la alternativa, así que no podemos confirmar que se cumplen los requisitos para que a ese hormigón se le otorgue el distintivo de garantía de calidad adicional.
+
+# Contraste de comparación de varianzas
+
+Consideremos de nuevo los datos del fichero *KentStateUniversityData.txt* sobre diferentes variables recopiladas sobre una muestra de estudiantes universitarios estadounidenses. Entre esas variables tenemos una nota de Matemáticas, *Math*, y una variable sobre el origen del estudiante, *State*, que discrimina si procede del estado de Kent o no. Veamos sus aspectos más básicos:
+```{r}
+summary(kent[, c("Math", "State")])
+```
+
+
+Supongamos que la profesora de Matemáticas quiere constatar un hecho que viene observando para tratar de planificar alguna acción de mejora. La profesora ha percibido que los estudiantes de fuera del estado presentan con frecuencia unos problemas de adaptación que les ocasionan bajos rendimientos cuando, en general, son buenos estudiantes, incluso ella diría que mejores que los del propio estado. Lo que ocurre es que con estos problemas que suelen padecer, los resultados, en promedio, se compensan.
+
+Se trataría, por tanto, de constatar una variabilidad en las notas de los de fuera del estado superior a la del propio estado. Si notamos $\sigma_{Kent}^2$ a la varianza de la nota de Matemáticas de los estudiantes del estado de Kent y $\sigma_{No.Kent}^2$ a la de los de fuera del estado, nuestras hipótesis son:
+$$
+H_0: \sigma_{Kent}^2 = \sigma_{No.Kent}^2
+$$
+frente a
+$$
+H_1: \sigma_{Kent}^2 < \sigma_{No.Kent}^2
+$$
+
+Antes de realizar el contraste debemos analizar los requisitos de éste, que determinan que ambas variables deben proceder de distribuciones normales. Realizamos los correspondientes contrastes de normalidad de Shapiro-Wilk:
+```{r}
+x <- kent$Math[kent$State == "In state"]
+y <- kent$Math[kent$State == "Out of state"]
+shapiro.test(x)
+shapiro.test(y)
+```
+
+Pues... *Houston, tenemos un problema*. Las notas de matemáticas de los estudiantes del estado no siguen una distribución normal. Esto impide que realicemos con garantías nuestro contraste. En caso de que hubiéramos podido hacerlo, el contraste se realiza de la siguiente manera:
+```{r}
+var.test(x, y, alternative = "less")
+```
+
+Pues, en efecto, la profesora estaría en lo cierto. Dado el p-valor 0.03656, hubiera podido constatar que la variabilidad de la nota de Matemáticas de los estudiantes del estado es inferior a la de los de fuera del estado, pero el hecho de que no se cumplan los requisitos de normalidad de las variables hace que el p-valor 0.03656 no sea realmente creíble y, por tanto, la conclusión extraida a través de él tampoco.
+
+# Análisis de la varianza (ANOVA)
+
+Recordemos que, a pesar del nombre, ANOVA es una comparación de varias medias. La hipótesis nula es que las medias de tres o más grupos son iguales, frente a la alternativa de que existen diferencias entre algunas de esas medias. Vamos a realizar un contraste de este tipo sobre un ejemplo, analizar si se cumplen los requisitos para dicho contraste y terminar con lo que se conoce como contrastes Post Hoc para determinar entre qué medias concretas hay diferencias.
+
+Vamos a considerar un ejemplo que aparece [en esta web](http://biocosas.github.io/R/050_anova.html). Los datos se refieren al salario semanal en euros declarado por los participantes en una encuesta en la comunidad valenciana. Se nos presentan en tres vectores, de la siguiente forma:
+```{r}
+valencia <- c(299, 313, 300, 321, 308, 312, 300, 310, 281, 308, 309, 300, 303, 303, 311, 308, 291, 298, 276, 290, 310, 308, 295, 310, 286, 295, 289, 293, 291, 297, 297, 287, 297, 302, 298, 301, 313, 290, 306, 313, 294, 308, 295, 303, 316, 299, 313, 296, 290, 299)
+
+castellon <- c(252, 248, 232, 229, 256, 233, 240, 237, 248, 232, 230, 246, 236, 250, 238, 243, 245, 241, 235, 249, 238, 231, 230, 239, 261, 243, 242, 245, 249, 258, 245, 236, 244, 242, 229, 246, 244, 244, 255, 247, 236, 252, 237, 259, 248, 237, 236, 252, 236, 239)
+
+alicante <- c(272, 268, 285, 274, 278, 287, 297, 275, 269, 281, 270, 284, 282, 281, 280, 286, 265, 283, 281, 272, 269, 286, 268, 288, 284, 282, 304, 280, 283, 281, 281, 286, 287, 288, 278, 272, 268, 287, 269, 272, 270, 271, 291, 265, 280, 280, 275, 294, 269, 277)
+```
+
+## Organización de los datos
+
+En primer lugar, tenemos que *unir* esos tres vectores en una hoja de datos. Fijaros que los casos son los individuos que participan en la muestra, mientras que las variables son el salario semanal declarado y la provincia de origen:
+```{r}
+salarios <- data.frame(salario = c(valencia, castellon, alicante), 
+                       provincia = c(rep("Valencia", length(valencia)), 
+                                     rep("Castellón", length(castellon)), 
+                                     rep("Alicante", length(alicante))))
+summary(salarios)
+```
+
+Podemos visualizar preliminarmente las diferencias:
+```{r}
+boxplot(salario ~ provincia, data = salarios)
+```
+
+Al parecer, hay diferencias evidentes, pero tenemos que contrastar su significación estadística.
+
+## Realización del ANOVA
+
+El modelo se ajusta de la siguiente forma:
+```{r}
+anova <- aov(salario ~ provincia, data = salarios)
+summary(anova)
+```
+
+En las salidas aparecen todas las cantidades que conocéis de las clases de teoría: las suma de cuadrados entre grupos y dentro de los grupos, el valor del estadístico F... y, lo que más nos interesa, el p-valor, debajo de *Pr(>F)*. En este caso, es tan pequeño que ni siquiera da un valor exacto. Podemos decir que es prácticamente cero, confirmando lo que habíamos visto en el gráfico anterior.
+
+Podemos concluir, por tanto, que existen diferencias estadísticamente significativas en los salarios medios de las tres provincias.
+
+## Comprobación de los supuestos
+
+Ahora bien, debemos ser cuidadosos porque ese p-valor se ha calculado presuponiendo que se cumplen los requisitos para realizar un ANOVA:
+
+1. Independencia de las observaciones.
+2. Igualdad de las varianzas en los tres grupos.
+3. Normalidad de los datos de los tres grupos.
+
+Ahora vamos a comprobarlos todos ellos.
+
+En primer lugar, sobre la independencia de las observaciones, existen pruebas de independencia específicas, pero no nos vamos a meter en ello. Nos conformamos con pensar que quienes han realizado la encuesta habrán procurado que cada muestra en cada provincia se haya realizado de manera que los datos sean independientes unos de otros.
+
+Con respecto a la igualdad de las varianzas pasa algo parecido: existe, por ejemplo, el test de Barlett para contrastar si hay diferencias entre las varianzas, pero prefiero que nos quedemos con una comprobación menos rigurosa. Si os fijáis en los tres diagramas de caja que aparecen al principio del ejemplo, ¿no muestran que la variabilidad de las tres muestras es bastante similar? No la posición de los diagramas, sino su *forma*. Eso es indicativo de que parece ser aceptable pensar que las varianzas son similares.
+
+Por último, hay que comprobar que dentro de cada grupo, es decir, dentro de cada provincia, los datos siguen distribuciones normales. Que dentro de cada grupo los datos sean normales sería lo mismo que decir que los datos de cada grupo menos la media de cada grupo sean normales. Por suerte, los datos de cada grupo menos la media de cada grupo son los residuos del modelo ANOVA, por lo que podemos realizar un simple contraste de normalidad de Shapiro-Wilk para ver si es aceptable que sigan una distribución normal:
+```{r}
+shapiro.test(anova$residuals)
+```
+
+Vemos que es perfectamente asumible que así sea.
+
+## Pruebas post-hoc
+
+Una vez que un ANOVA detecta diferencias, surge la pregunta de ¿cuáles son esas diferencias? Nuestro primer gráfico del ejemplo dejó claro que las diferencias apuntan a que el salario medio en Castellón es menor que en Valencia y Alicante, pero necesitamos un criterio general y riguroso para explorar esas diferencias. Eso es lo que proporcionan las pruebas post-hoc; nosotros concretamente vamos a utilizar los intervalos de confianza de Tukey:
+```{r}
+TukeyHSD(anova)
+```
+
+Quizá es mejor verlo gráficamente:
+```{r}
+plot(TukeyHSD(anova))
+```
+
+
+Lo que aparecen son los intervalos de confianza de las diferencias entre las medias. Y nos proporcionan dos conclusiones evidentes y otra quizá no tan evidente:
+
+1. Es evidente que la diferencia media Valencia-Castellón es muy significativa en favor de Valencia.
+2. Es evidente que la diferencia media Castellón-Alicante es muy significativa en favor de Alicante.
+3. Lo que no estaba tan claro es que la diferencia media Valencia-Alicante fuera significativa en favor de Valencia. El intervalo de confianza de esta diferencia media no incluye el cero, por lo que sí es significativa.
+
+# Ejercicios propuestos
+
+En todos los ejercicios debes confirmar que se cumplen los requisitos para poder realizar los correspondientes contrastes. En caso de que dichos requisitos no se cumplan, realiza de todas formas el contraste y comenta en las conclusiones que los resultados no son fiables.
+
+## Ejercicio 1
+
+En referencia a los datos de la Universidad de Kent que ya hemos usado, determina si existen diferencias significativas entre las notas medias entre English y Reading.
+
+## Ejercicio 2
+
+Está extraído de [este enlace](http://biocosas.github.io/R/050_anova.html)
+
+El departamento de Psicología de una Universidad de Castilla-La Mancha ha realizado un estudio sobre hábitos, preferencias y satisfacción sexual en estudiantes universitarios. Hemos utilizado los datos que recogieron en sus encuestas y queremos conocer si existen diferencias entre la frecuencia mensual de relaciones sexuales de estudiantes universitarios pertenecientes a tres titulaciones universitarias diferentes, T1, T2 y T3. Los datos són los siguientes:
+```{r}
+T1 <- c(11, 14, 7, 15, 11, 13, 11, 16, 10, 15, 18, 12, 9, 9, 10, 10, 15, 10, 14, 10, 10, 12, 14, 12, 15, 7, 13, 6, 10, 15, 20, 10, 13, 10, 6, 14, 8, 10, 8, 11)
+T2 <- c(13, 10, 12, 7, 5, 10, 10, 16, 9, 7, 7, 2, 6, 9, 9, 8, 8, 10, 3, 6, 5, 2, 9, 3, 4, 5, 10, 8, 5, 9, 10, 8, 13, 10, 0, 2, 1, 1, 0, 4)
+T3 <- c(6, 7, 3, 5, 9, 6, 1, 6, 0, 2, 5, 6, 11, 6, 7, 0, 5, 7, 5, 4, 7, 4, 2, 8, 9, 6, 1, 4, 7, 7, 8, 9, 7, 5, 1, 6, 9, 4, 7, 6)
+```
+
+Se pide realizar un contraste para determinar si existen diferencias significativas en la frecuencia promedio de relaciones sexuales entre las tres titulaciones y, en caso de que existan, especifica cuáles son esas diferencias.
+
+## Ejercicio 3
+
+De nuevo en referencia a los datos de la Universidad de Kent, determina si en términos generales y a partir de los datos de esa muestra podemos afirmar que la proporción de varones atletas es superior a la de mujeres atletas.
+
+## Ejercicio 4
+
+En [este enlace](https://www.nytimes.com/es/2016/05/27/en-estados-unidos-cada-vez-hay-menos-fumadores/) aparece que el porcentaje de fumadores en Estados Unidos está en el 15.1%. Utiliza los datos de la Universidad de Kent para confirmar si el porcentaje de fumadores universitarios es superior a la de la población en general. Ten en cuenta que la variable *Smoking* toma valores *0 = Nonsmoker*, *1 = Past smoker* y *2 = Current smoker*.
+
+## Ejercicio 5
+
+El proceso industrial de llenado del aceite en botellas de 750 ml de una determinada empresa se considera bajo control si su desviación típica es inferior o igual a 5 ml. La responsable del control de calidad te pide que compruebes si el proceso está bajo control y te ofrece los datos (en ml.) que se encuentran en el fichero *aceite2.txt*: ¿se puede aceptar estadísticamente que el proceso está bajo control con un nivel de confianza del 95%?
+
+## Ejercicio 6
+
+Utiliza algunas de las variables de los datos de la Universidad de Kent para plantear algún contraste de hipótesis que te resulte interesante.

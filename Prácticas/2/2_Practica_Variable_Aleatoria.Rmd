@@ -1,0 +1,401 @@
+﻿---
+title: "Pr&aacute;cticas de Estad&iacute;stica. Pr&aacute;ctica 2"
+author:
+- name: Dr. Antonio Jos&eacute; S&aacute;ez Castillo, Departamento de Estad&iacute;stica e Investigaci&oacute;n Operativa, Escuela Polit&eacute;cnica Superior de Linares, Universidad de Ja&eacute;n
+date: Versi&oacute;n `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: true
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Variable Aleatoria
+---
+
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Objetivos
+
+El objetivo general de la práctica es aprender a utilizar R para el cálculo de probabilidades y cuantiles y para la generación de muestras aleatorias de las distribuciones que se están describiendo en las clases teóricas.
+
+Aquí no vamos a utilizar ningún mini-proyecto a modo de explicación, porque se trata de una práctica que debe servir de entrenamiento para el manejo de las distribuciones de probabilidad, manejo que será imprescindible en el desarrollo de los proyectos, pero que sólo puede ponerse en práctica una vez que aprendamos, en el tema siguiente, a estimar los parámetros de las distribuciones.
+
+# Funciones básicas
+
+Función       | Acción                                      | Sintaxis básica
+------------- | ------------------------------------------- | ---------------------------
+dbinom()      | Función masa distribución binomial          | dbinom(q, n.ex, prob)
+qbinom()      | Función cuantil distribución binomial       | qbinom(p, n.ex, prob)
+rbinom()      | Muestra aleatoria distribución binomial     | rbinom(num, n.ex, prob)
+dpois()       | Función masa distribución de Poisson        | dpois(q, media)
+qpois()       | Función cuantil distribución Poisson        | qpois(p, media)
+rpois()       | Muestra aleatoria distribución Poisson      | rpois(num, media)
+dgeom()       | Función masa distribución geométrica        | dgeom(q, prob)
+qgeom()       | Función cuantil distribución geométrica     | qgeom(p, prob)
+rgeom()       | Muestra aleatoria distribución geométrica   | rgeom(num, prob)
+dnbinom()     | Función masa distribución binomial  neg.    | dnbinom(q, k, prob)
+qnbinom()     | Función cuantil distribución binomial neg.  | qnbinom(p, k, prob)
+rnbinom()     | Muestra aleatoria distribución binomial neg.| rbinom(num, n.ex, prob)
+dexp()        | Función densidad distribución exponencial   | dexp(q, lambda)
+pexp()        | Función de distribución, dist. exponencial  | pexp(q, lambda)
+qexp()        | Función cuantil distribución exponencial    | qexp(p, lambda)
+rexp()        | Muestra aleatoria distribución exponencial  | rexp(num, lambda)
+dgamma()      | Función densidad distribución Gamma         | dgamma(q, a, lambda)
+ppgamma()     | Función de distribución, dist. Gamma        | pgamma(q, a, lambda)
+qgamma()      | Función cuantil distribución Gamma          | qgamma(p, a, lambda)
+rgamma()      | Muestra aleatoria distribución Gamma        | rgamma(num, a, lambda)
+dnorm()       | Función densidad distribución normal        | dnorm(q, mu, sigma)
+pnorm()       | Función de distribución, dist. normal       | pnorm(q, mu, sigma)
+qnorm()       | Función cuantil distribución normal         | qnorm(p, mu, sigma)
+rnorm()       | Muestra aleatoria distribución normal       | rnorm(num, mu, sigma)
+
+# Conceptos básicos
+
+En este caso no queda más remedio que empezar la práctica recordando lo que ya se os ha explicado en la teoría, porque los errores en la práctica se deben mucho más a no haber comprendido los conceptos básicos sobre variables aleatorias que a problemas con R.
+
+## Cálculo de probabilidades en variables discretas
+
+Recordad que dada una variable discreta, $X$, su función masa de probabilidad, $f(x)$ proporciona la probabilidad de que $X$ sea igual a $x$. Por lo tanto, cualquier probabilidad relativa a la variable $X$ se puede calcular como la **suma de la función masa en los valores correspondientes**:
+$$
+P[X \in B] = \sum_{x \in B} f(x)
+$$
+
+Por ejemplo, 
+$$
+P[3 < X \leq 8] = f(4) + f(5) + f(6) + f(7) + f(8)\\
+P[X < 3] = f(0) + f(1) + f(2)\\
+P[X > 3] = 1 - P[X \leq 3] = 1 - (f(0) + f(1) + f(2) + f(3))
+$$
+
+## Cálculo de probabilidades en variables continuas
+
+Por el contrario, dada una variable continua $X$, su función de densidad, $f(x)$ proporciona la curva bajo la cual se haya la probabilidad de los valores que puede tomar $X$, de manera que cualquier probabilidad relativa a la variable $X$ se puede calcular como la **integral de la función de densidad en los valores correspondientes**:
+$$
+P[X \in B] = \int_{B} f(x) dx
+$$
+
+Por ejemplo:
+$$
+P[0 \leq X \leq 5] = \int_0^5 f(x)dx = F(5) - F(0)\\
+P[0 < X < 5] = \int_0^5 f(x)dx = F(5) - F(0)\\
+P[X > 2.5] = \int_{2.5}^{\infty} f(x)dx = F(\infty) - F(2.5) = 1 - F(2.5)\\
+P[X \leq 3.6] = \int_{-\infty}^{3.6} f(x)dx = F(3.6) - F(\infty) = F(3.6) - 0
+$$
+
+## Distribuciones discretas y continuas
+
+La distribución de probabilidad de una variable queda, por tanto, determinada por la función masa (en el caso de las discretas) o densidad (en el caso de las continuas). Lo que es imprescindible es que tengamos muy claro cómo son las distribuciones de probabilidad que estamos manejando, porque se ven con demasiada frecuencia disparates de dimensiones épicas debidos a que alguien trata una distribución discreta como continua o viceversa.
+
+A riesgo de aburrir, aquí tenemos otro resumen al respecto:
+
+Distribución              | Tipo
+------------------------- | ----------------------
+Binomial(n, p)            | Discreta
+Poisson($\lambda$)        | Discreta
+Geométrica(p)             | Discreta
+Binomial negativa(a, p)   | Discreta
+Exponencial($\lambda$)    | Continua
+Gamma($a, \lambda$)       | Continua
+Normal($\mu, \sigma$)     | Continua
+
+# Ejemplos
+
+## Distribución binomial
+
+Supongamos que tenemos 10 dispositivos trabajando en paralelo de forma independiente y que la probabilidad de que un dispositivo falle un día cualquiera es 0.16.
+
+El número de dispositivos que falla en un día cualquiera, $X$, es una variable discreta con distribución binomial de parámetros 10 y 0.16, $B(10, 0.06)$. Pongamos algunos ejemplos de uso de esta distribución:
+
+1. Probabilidad de que fallen más de tres dispositivos en un día, $P[X>3] = \sum_{x=4}^{10} f(x)$:
+```{r}
+sum(dbinom(4:10, 10, 0.16))
+```
+
+2. Probabilidad de que fallen 4 o más dispositivos y menos de 7 en un día, $P[4 \leq X <7] = \sum_{x=4}^{6} f(x)$:
+```{r}
+sum(dbinom(4:6, 10, 0.16))
+```
+
+3. Ahora, imaginemos que queremos que salte una alarma los días que más fallos haya. Concretamente, queremos destacar que salte una alarma el 10% de días en que más fallos haya. Lo que necesitamos es el percentil 90:
+```{r}
+qbinom(0.9, 10, 0.16)
+```
+
+4. Por último, imaginemos que necesitamos simular lo que puede pasar los próximos 15 días. Necesitamos una muestra aleatoria de tamaño 15:
+```{r}
+rbinom(15, 10, 0.16)
+```
+
+## Distribución de Poisson
+
+Supongamos ahora que $X$ representa el número de fallos que se producen a la hora en una máquina que fabrica componentes, y que sigue una distribución de Poisson de parámetro (media) 2.5 fallos/hora. Pongamos algunos ejemplos de uso de esta distribución:
+
+1. Calculemos la probabilidad de que se produzcan al menos dos fallos en una hora, $P[X \geq 2] = 1 - P[X < 2] = 1 - \sum_{x=0}^1 f(x)$:
+```{r}
+1 - sum(dpois(0:1, 2.5))
+```
+
+2. Calculamos la probabilidad de que fallen menos de 5 componentes en una hora, $P[X<5] = \sum_{x=0}^4 f(x)$:
+```{r}
+sum(dpois(0:4, 2.5))
+```
+
+3. Queremos calcular ahora el percentil 80 de la distribución:
+```{r}
+qpois(0.8, 2.5)
+```
+
+Entonces, si un día se producen 4 o más fallos, diremos que se ha dado un valor que supera el 80% de los valores habituales.
+
+4. Finalmente, podemos obtener una muestra de, por ejemplo, 10 valores aleatorios de lo que podría pasar en las siguientes 10 horas:
+```{r}
+rpois(10, 2.5)
+```
+
+## Distribución geométrica
+
+Siguiendo con el ejemplo de la binomial, donde teníamos dispositivos que podían fallar en un día con probabilidad 0.16, consideremos la variable $Y$ que cuenta el número de días que un dispositivo funciona bien hasta que al día siguiente falla. Esa variable sigue una distribución geométrica de parámetro 0.16.
+
+1. Calculemos la probabilidad de que pasen exactamente 5 días hasta el fallo, $P[Y=5] = f(5)$:
+```{r}
+dgeom(5, 0.16)
+```
+
+2. Calculemos la probabilidad de que pasen más de 2 días hasta el fallo, $P[Y>2] = 1 - P[Y \leq 2] = 1 - \sum_{y=0}^2 f(y)$:
+```{r}
+1 - sum(dgeom(0:2, 0.16))
+```
+
+3. Calculemos algunos percentiles relevantes, por ejemplo, 25, 50, 75 y 95:
+```{r}
+qgeom(c(0.25, 0.50, 0.75, 0.95), 0.16)
+```
+
+4. Finalmente, simulemos una muestra de tamaño 5:
+```{r}
+rgeom(5, 0.16)
+```
+
+## Distribución binomial negativa
+
+Un nuevo escenario relacionado con el anterior. Cuando un dispositivo falla se puede sustituir por uno de repuesto, hasta que éste se vuelve a romper, y el de repuesto tiene la misma probabilidad de fallo, 0.16. En ese caso, $Z$, el número de días en funcionamiento antes del segundo fallo sigue una distribución binomial negativa de parámetros 2 y 0.16. Vamos a calcular las mismas probabilidades, cuantiles y una muestra similar.
+
+1. Calculemos la probabilidad de que pasen exactamente 5 días hasta el fallo, $P[Z=5] = f(5)$:
+```{r}
+dnbinom(5, 2, 0.16)
+```
+
+2. Calculemos la probabilidad de que pasen más de 2 días hasta el fallo, $P[Z>2] = 1 - P[Z \leq 2] = 1 - \sum_{z=0}^2 f(z)$:
+```{r}
+1 - sum(dnbinom(0:2, 2, 0.16))
+```
+
+3. Calculemos algunos percentiles relevantes, por ejemplo, 25, 50, 75 y 95:
+```{r}
+qnbinom(c(0.25, 0.50, 0.75, 0.95), 2, 0.16)
+```
+
+4. Finalmente, simulemos una muestra de tamaño 5:
+```{r}
+rnbinom(5, 2, 0.16)
+```
+
+## Distribución exponencial
+
+Si hemos dicho que el número de fallos que se producen a la hora en una máquina que fabrica componentes sigue una distribución de Poisson de parámetro (media) 2.5 fallos/hora, sabemos que el tiempo, $T$, entre dos fallos, sigue entonces una distribución exponencial del mismo parámetro. Vamos a poner ejemplos del uso de esta distribución:
+
+1. Representemos y calculemos la probabilidad de que pasen más de 10 minutos entre fallo y fallo, $P[T>\frac{10}{60}] = \int_{1/6}^{\infty} f(x) dx = F(\infty) - F(1/6) = 1 - F(1/6)$:
+```{r}
+# Primero representamos lo que estamos calculando
+a <- 1/6 # Extremo inferior
+b <- qexp(0.99, 2.5) # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 2.5), 0) 
+curve(dexp(x, 2.5), xlim = c(0, qexp(0.99, 2.5)), main = 'exp(2.5)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+Ahora calculamos la probabilidad (el área en rojo):
+```{r}
+1 - pexp(1/6, 2.5)
+```
+
+2. Representemos y calculemos la probabilidad de que pasen entre 5 y 10 minutos entre fallo y fallo, $P[\frac{5}{60} < T < \frac{10}{60}] = \int_{5/60}^{10/60} f(x) dx = F(10/60) - F(5/60)$:
+```{r}
+# Primero representamos lo que estamos calculando
+a <- 5/60 # Extremo inferior
+b <- 10/60 # Extremo superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 2.5), 0) 
+curve(dexp(x, 2.5), xlim = c(0, qexp(0.99, 2.5)), main = 'exp(2.5)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+Ahora calculamos la probabilidad (el área en rojo):
+```{r}
+pexp(10/60, 2.5) - pexp(5/60, 2.5)
+```
+
+3. Calculemos y representemos los percentiles 25, 50 y 75:
+```{r}
+# Los percentiles son:
+qexp(c(0.25, 0.50, 0.75), 2.5)
+# Vamos a representarlos
+a <- 0 # Extremo inferior
+b <- qexp(0.99, 2.5) # ¡No podemos poner infinito!
+curve(dexp(x, 2.5), xlim = c(0, qexp(0.99, 2.5)), main = 'exp(2.5)') 
+# P25:
+p <- 0.25
+x <- rep(qexp(p, 2.5), 2)
+y <- c(0, dexp(qexp(p, 2.5), 2.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qexp(p, 2.5), 2))
+# P50:
+p <- 0.5
+x <- rep(qexp(p, 2.5), 2)
+y <- c(0, dexp(qexp(p, 2.5), 2.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qexp(p, 2.5), 2))
+# P75:
+p <- 0.75
+x <- rep(qexp(p, 2.5), 2)
+y <- c(0, dexp(qexp(p, 2.5), 2.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qexp(p, 2.5), 2))
+```
+
+3. Por último, vamos a simular 10 valores:
+```{r}
+rexp(10, 2.5)
+```
+
+## Distribución Gamma
+
+Supongamos que $X$ sigue ahora una distribución Gamma de parámetros $a = 1.5$ y $\lambda = 3.1$. Vamos a poner ejemplos del uso de esta distribución:
+
+1. Representemos y calculemos la probabilidad de que $X$ sea menor que 1.1, $P[0 < X < 1.1] = \int_{0}^{1.1} f(x) dx = F(1.1) - F(0) = F(1.1) - 0$:
+```{r}
+# Primero representamos lo que estamos calculando
+a <- 0 # Extremo inferior
+b <- 1.1 #Extremos superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dgamma(seq(a, b, 0.01), 1.5, 3.1), 0) 
+curve(dgamma(x, 1.5, 3.1), xlim = c(0, qgamma(0.99, 1.5, 3.1)), main = 'Gamma(1.5, 3.1)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+Ahora calculamos la probabilidad (el área en rojo):
+```{r}
+pgamma(1.1, 1.5, 3.1)
+```
+
+2. Representemos y calculemos la probabilidad de que $X$ esté entre 0.5 y 1, $P[0.5 < X < 1] = \int_{0.5}^{1} f(x) dx = F(1) - F(0.5)$:
+```{r}
+# Primero representamos lo que estamos calculando
+a <- 0.5 # Extremo inferior
+b <- 1 # Extremo superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dgamma(seq(a, b, 0.01), 1.5, 3.1), 0) 
+curve(dgamma(x, 1.5, 3.1), xlim = c(0, qgamma(0.99, 1.5, 3.1)), main = 'Gamma(1.5, 3.1)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+Ahora calculamos la probabilidad (el área en rojo):
+```{r}
+pgamma(1, 1.5, 3.1) - pexp(0.5, 1.5, 3.1)
+```
+
+3. Calculemos y representemos los percentiles 25, 50 y 75:
+```{r}
+# Los percentiles son:
+qgamma(c(0.25, 0.50, 0.75), 1.5, 3.1)
+# Vamos a representarlos
+a <- 0 # Extremo inferior
+b <- qgamma(0.99, 1.5, 3.1) # ¡No podemos poner infinito!
+curve(dgamma(x, 1.5, 3.1), xlim = c(0, qgamma(0.99, 1.5, 3.1)), main = 'Gamma(1.5, 3.1)') 
+# P25:
+p <- 0.25
+x <- rep(qgamma(p, 1.5, 3.1), 2)
+y <- c(0, dgamma(qgamma(p, 1.5, 3.1), 1.5, 3.1))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qgamma(p, 1.5, 3.1), 2))
+# P50:
+p <- 0.5
+x <- rep(qgamma(p, 1.5, 3.1), 2)
+y <- c(0, dgamma(qgamma(p, 1.5, 3.1), 1.5, 3.1))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qgamma(p, 1.5, 3.1), 2))
+# P75:
+p <- 0.75
+x <- rep(qgamma(p, 1.5, 3.1), 2)
+y <- c(0, dgamma(qgamma(p, 1.5, 3.1), 1.5, 3.1))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qgamma(p, 1.5, 3.1), 2))
+```
+
+3. Por último, vamos a simular 10 valores:
+```{r}
+rgamma(10, 1.5, 3.1)
+```
+
+## Distribución normal
+
+Supongamos finalmente que $X$ sigue ahora una distribución normal de media $\mu = 5.1$ y $\sigma = 1.5$. Vamos a poner ejemplos del uso de esta distribución:
+
+1. Representemos y calculemos la probabilidad de que $X$ sea menor que 6, $P[X < 6] = \int_{-\infty}^{6} f(x) dx = F(6) - F(-\infty) = F(6) - 0$:
+```{r}
+# Primero representamos lo que estamos calculando
+a <- qnorm(0.001, 5.1, 1.5) # Extremo inferior...
+b <- 6 #Extremos superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dnorm(seq(a, b, 0.01), 5.1, 1.5), 0) 
+curve(dnorm(x, 5.1, 1.5), xlim = qnorm(c(0.001, 0.999), 5.1, 1.5), main = 'Normal(5.1, 1.5)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+Ahora calculamos la probabilidad (el área en rojo):
+```{r}
+pnorm(6, 5.1, 1.5)
+```
+
+2. Calculemos y representemos los percentiles 25, 50 y 75:
+```{r}
+# Los percentiles son:
+qnorm(c(0.25, 0.50, 0.75), 5.1, 1.5)
+# Vamos a representarlos
+a <- qnorm(0.001, 5.1, 1.5) # Extremo inferior
+b <- qnorm(0.999, 5.1, 1.5) # ¡No podemos poner infinito!
+curve(dnorm(x, 5.1, 1.5), xlim = qnorm(c(0.001, 0.999), 5.1, 1.5), main = 'Normal(5.1, 1.5)') 
+# P25:
+p <- 0.25
+x <- rep(qnorm(p, 5.1, 1.5), 2)
+y <- c(0, dnorm(qnorm(p, 5.1, 1.5), 5.1, 1.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qnorm(p, 5.1, 1.5), 2))
+# P50:
+p <- 0.5
+x <- rep(qnorm(p, 5.1, 1.5), 2)
+y <- c(0, dnorm(qnorm(p, 5.1, 1.5), 5.1, 1.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qnorm(p, 5.1, 1.5), 2))
+# P75:
+p <- 0.75
+x <- rep(qnorm(p, 5.1, 1.5), 2)
+y <- c(0, dnorm(qnorm(p, 5.1, 1.5), 5.1, 1.5))
+lines(x, y, col = "red")
+text(x[1], y[1], round(qnorm(p, 5.1, 1.5), 2))
+```
+
+3. Por último, vamos a simular 1000 valores, representar su histograma y dibujar sobre él la función de densidad de la que proceden los datos:
+```{r}
+x <- rnorm(1000, 5.1, 1.5)
+hist(x, freq = FALSE)
+lines(sort(x), dnorm(sort(x), 5.1, 1.5))
+```
+
+¿Qué te parece? A buen entendedor...

@@ -1,0 +1,817 @@
+﻿---
+title: "Pr&aacute;cticas de Estad&iacute;stica. Pr&aacute;ctica 3"
+author:
+- name: Dr. Antonio Jos&eacute; S&aacute;ez Castillo, Departamento de Estad&iacute;stica e Investigaci&oacute;n Operativa, Escuela Polit&eacute;cnica Superior de Linares, Universidad de Ja&eacute;n
+date: "Versi&oacute;n 1.0. Junio de 2017"
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Estimación Puntual de Parámetros y Bondad de Ajuste
+---
+
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Objetivos
+
+1. Obtener las estimaciones de máxima verosimilitud de los parámetros de las distribuciones de probabilidad que manejamos en la asignatura.
+2. Estimar los errores estándar de esas estimaciones puntuales.
+3. Valorar la bondad de los ajustes que las distribuciones con los parámetros estimados proporcionan sobre los datos.
+
+La idea que no podemos perder de vista en toda la práctica es la siguiente:
+
+- Tenemos unos datos y buscamos una distribución de probabilidad *buena* para esos datos.
+- Lo primero será **estimar los parámetros de la distribución**.
+- Luego tendremos que valorar la *estabilidad* de esas estimaciones frente a las fluctuaciones de las muestras, mediante el **cálculo aproximado de los errores estándar**.
+- Finalmente, siempre tenemos que preguntarnos: *¿realmente es buena esta distribución de probabilidad para ajustar los datos?*. Es lo que llamamos **valorar la bondad del ajuste**.
+
+Las principales funciones involucradas, además de otras ya conocidas, son las siguientes:
+
+Función       | Acción                                      | Sintaxis básica
+------------- | ------------------------------------------- | ---------------------------
+optim()       | Encuentra el mínimo de una función          | optim(par0, logL)
+chisq.test()  | Muestra aleatoria distribución binomial     | chisq.test(datos, prob, simulate.p.value = TRUE)
+ks.test()     | Calcula estadístico KS de bondad de ajuste  | ks.test(datos, f.dist)
+
+Lo que haremos es utilizar algunos datos correspondientes a los mismos ejemplos que en la práctica anterior u otros nuevos para tratar de ajustarles las distribuciones que estamos manejando, pero ahora no vamos a suponer que la variable sigue el modelo, sino que tenemos una muestra y queremos ver si la distribución teórica es adecuada como modelo.
+
+# Preliminares
+
+Tenemos que recordar algunos aspectos básicos de las clases de teoría e introducir algunos resultados y técnicas específicas de la práctica.
+
+## Estimaciones por máxima verosimilitud
+
+En relación a las estimaciones de máxima verosimilitud (a partir de ahora, MLE, por *maximum likelihood estimates*), recordemos que se basan en encontrar los parámetros que hagan máxima la probabilidad o la densidad de los datos de la muestra. 
+
+Si $f(x)$ representa la función masa o la función de densidad del dato $x$, teniendo en cuenta que la muestra está compuesta por $N$ datos independientes, $x_1, ..., x_N$, la probabilidad o densidad de la muestra es 
+$$
+L(\theta;x_1, ..., x_N) = \prod_{i=1}^N f(x_i)
+$$
+
+En esa expresión, $\theta$ representa el parámetro o parámetros que hay que estimar de la distribución. Es importante que nos demos cuenta de que esa función depende de $\theta$, no de $x_1, ..., x_N$, ya que el parámetro es desconocido, mientras que los datos de la muestra sí son conocidos.
+
+A esa función se le llama **función de verosimilitud**, y los MLE son los que hacen máxima dicha función. De todas formas, hay un *truco* para hacer más sencillo el problema de optimización que supone buscar el máximo a $L$: dado que la función logaritmo es estrictamente creciente, el valor $\hat{\theta}$ que haga máximo $\log(L)$ también hace máximo $L$, así que en vez de buscar el máximo de $L$, que involucra un productorio, busquemos el máximo de $\log(L)$, que involucra un sumatorio; a la función $\log(L)$ a la cual se le busca el máximo se le llama **función de log-verosimilitud**. Por tanto, el problema de buscar los MLE se traduce en el siguiente problema matemático de óptimización: tenemos que buscar el valor $\hat{\theta}$ correspondiente a
+$$
+max_{\theta} \sum_{i=1}^N \log{f(x_i; \theta)}
+$$
+
+En clase de teoría ya se ha comentado que en la mayoría de las distribuciones que manejamos, los MLE son muy fáciles de obtener y, de hecho, usamos una tabla-resumen donde aparecen sus expresiones. Además, también tenemos expresiones de la mayoría de los errores estandar asociados, aunque no de todos. La situación la podemos resumir en esta tabla:
+
+Distribución       | $MLE(\theta)$                               | $s.e.(\hat{\theta})$
+-------------      | ------------------------------------------- | ---------------------------
+$B(n, p)$          | $\hat{p} =  \frac{\bar{x}}{n}$              | $s.e.(\hat{p}) \approx \sqrt \frac{\hat{p}(1-\hat{p})}{N}$
+$Poisson(\lambda)$ | $\hat{\lambda} = \bar{x}$                   | $s.e.(\hat{\lambda}) \approx \frac{s_{N-1}}{\sqrt N}$
+$Geo(p)$           | $\hat{p} = \frac{1}{1 + \bar{x}}$           | $s.e.(\hat{p}) \approx \sqrt{\frac{\hat{p}(1-\hat{p})}{N}}$
+$BN(a, p)$         | Por métodos numéricos                       | Sin fórmula: se aproximan por remuestreo
+$exp(\lambda)$     | $\hat{\lambda} = \frac{1}{\bar{x}}$         | Sin fórmula: se aproximan por remuestreo
+$Gamma(a,\lambda)$ | Por métodos numéricos                       | Sin fórmula: se aproximan por remuestreo
+$N(\mu,\sigma)$    | $\hat{\mu} = \bar{x}$, $\hat{\sigma} = s_N$ | $s.e.(\hat{\mu}) \approx \frac{s_{N-1}}{\sqrt N}$, $s.e.(\hat{\sigma})$: Sin fórmula
+ 
+Los dos únicos casos donde no hay expresiones de los MLE son la distribución binomial negativa y la distribución Gamma; lo que ocurre en esas dos distribuciones es que cuando tratamos de aplicar el proceso habitual de búsqueda de un óptimo (derivamos la función, igualamos a cero y despejamos), no es posible resolver el sistema de ecuaciones que aparece.
+
+Eso no es un gran problema. Lo que vamos a hacer nosotros es encontrar ese óptimo por métodos numéricos. En las asignaturas de Matemáticas veréis algunos de esos métodos con detalle. Para lo que nos afecta a nosotros sólo necesitamos saber que esos métodos buscan el óptimo de la función de forma recursiva, evaluando en distintos puntos, buscando valores donde la función vaya *mejorando* con respecto a los valores anteriores.
+
+## Estimación de errores estándar por remuestreo
+
+En relación a los errores estandar de las estimaciones, tenemos expresiones para la mayoría de ellos, pero nos faltan para los MLE de la binomial negativa, exponencial, Gamma y normal. Vamos a emplear una técnica, llamada **de remuestreo o bootstraping** para obtener esas estimaciones de los errores estándar. 
+
+La idea es la siguiente: nosotros tenemos una muestra de datos, $x_1, ..., x_N$, que dan lugar a una estimación del parámetro, $\hat{\theta}$. El error estándar es la desviación típica que obtendríamos al hacer la desviación típica de todas las estimaciones que obtendríamos si tuviéramos todas las muestras de datos posibles, lo que es una utopía.
+
+Pero lo que sí podemos hacer es obtener muchas muestras *replicadas* a partir de nuestra muestra, es decir, sacamos de nuestra muestra otras muchas muestras, obtenemos las muchas estimaciones del parámetro correspondientes y consideramos la desviación típica de esas estimaciones. Lo podemos expresar en forma de algoritmo de la siguiente forma:
+
+1. Obtenemos $B$ muestras replicadas, con reemplazamiento, de tamaño $N$, a partir de nuestra muestra $x_1, ..., x_N$.
+2. Obtenemos las $B$ estimaciones correspondientes del parámetro, $\hat\theta_1, ..., \hat\theta_B$, en cada una de las $B$ muestras replicadas.
+3. La estimación del error estándar será la desviación típica de $\hat\theta_1, ..., \hat\theta_B$.
+
+## Bondad de los ajustes
+
+Lo primero de todo, es importante que nos aclaremos con el concepto *ajuste*. Recordemos que nuestro punto de partida es una muestra de datos, $x_1, ..., x_N$, de una variable aleatoria.
+
+Dado que es una variable **aleatoria** sabemos que tiene una distribución de probabilidad determinada: por eso su valor cambia en la muestra y en otras hipotéticas muestras. El problema es que esa distribución de probabilidad no se conoce, sino que hay que buscarla. 
+
+Lo que se pretende, por tanto, es encontrar una distribución de probabilidad que se *ajuste* bien a la muestra de datos, entendiendo ese *ajustarse* desde el punto de vista de las probabilidades o frecuencias de la muestra con respecto a las probabilidades teóricas o frecuencias ajustadas de la distribución teórica.
+
+Si, por ejemplo, tenemos una muestra de datos $x_1, ...., x_N$ y creemos que puede seguir una distribución de Poisson, estimamos el parámetro desconocido $\lambda$ mediante $\hat\lambda$ y ya tenemos un ajuste: **creemos que la variable aleatoria $X$ sigue una distribución $Poisson(\hat{\lambda})$**.
+
+Sin embargo, esa afirmación no deja de ser un deseo, una creencia, porque no lo hemos comprobado:
+
+- Podría ocurrir que la variable $X$ no siga una Poisson, sino una geométrica.
+- Podría ocurrir que hayamos estimado mal el parámetro $\lambda$.
+
+Por eso es importante realizar alguna comprobación acerca de si la distribución que hemos ajustado a los datos realmente es un buen ajuste, lo suficientemente bueno para que podamos afirmar con seguridad que **la variable aleatoria $X$ sigue una distribución $Poisson(\lambda)$**. Eso es lo que llamamos **valorar la bondad del ajuste**.
+
+Lo vamos a hacer de dos formas:
+
+1. Más informal y visual: queremos algún gráfico que permita comparar la distribución de frecuencias de los datos con la distribución de frecuencias del ajuste.
+2. Más rigurosa y precisa: queremos un valor numérico que permita decidir si podemos aceptar que el ajuste es un ajuste razonable o no.
+
+Para lo primero vamos a comparar gráficos que ya conocemos. Concretamente:
+
+- En el caso de las distribuciones discretas, vamos a comparar el diagrama de barras de los datos con la función masa de probabilidad del ajuste.
+- En el caso de las distribuciones continuas, vamos a comparar el histograma de los datos con la función de densidad del ajuste. También compararemos las respectivas funciones de distribución ajustada y empírica.
+
+Para lo segundo vamos a aprender a realizar lo que se llaman **contrastes de bondad de ajuste**. Concretamente:
+
+- En el caso de las distribuciones discretas, vamos a utilizar el contraste $\chi^2$, que compara las frecuencias observadas de la muestra con las frecuencias esperadas según el ajuste. 
+- En el caso de las distribuciones continuas, vamos a utilizar el contraste *de Kolmogorov-Smirnoff*, que compara la función de distribución de los datos con la función de distribución del ajuste.
+
+Cuanto mayor sea el valor del estadístico del contraste, más diferentes son las distribuciones de los datos y del ajuste y, por tanto, peor es el ajuste. Por el contrario, cuanto más pequeño sea el valor del estadístico del contraste, más se parece el ajuste a los datos. 
+
+Así pues, ambos contrastes van a proporcionar un valor numérico que mide el grado de ajuste. Lo que ocurre es que, como ya hemos hablado tanto en Estadística Descriptiva como en Variable Aleatoria, un valor numérico sin el contexto de una distribución de probabilidad en el que contextualizarlo, no sirve de nada. 
+
+Por ejemplo, si nos sale el estadístico $\chi^2$ con un valor 2.36... ¿eso es mucho o poco? ¿es un buen ajuste o un mal ajuste? Si somos capaces de decir que el valor del estadístico se haya por encima del percentil 99, que es un valor altísimo, indicará que hay muchas diferencias entre los datos y el modelo ajustado. Si, por el contrario, el valor del estadístico del contraste es un valor *razonable*, indicará que el ajuste es *razonable*.
+
+Pues bien, llegado el momento, vamos a considerar razonable los valores del estadístico del contraste que estén por debajo del percentil 95. ¿Cómo comprobar rápidamente que un valor del estadístico de bondad de ajuste está por debajo del percentil 95? Calcularemos (o mejor dicho, aproximaremos) la proporción de posibles valores del estadístico por encima de nuestro valor del estadístico, y llamaremos a esta proporción **p-valor**:
+
+- Si el p-valor es inferior a 0.05, rechazaremos al ajuste.
+- Si el p-valor es superior a 0.05, admitiremos como válido el ajuste.
+
+Lo último por ahora, ¿y cómo vamos a saber en qué percentil está el valor del estadístico o cómo vamos a aproximar el p-valor? Mediante bootstraping, pero lo veremos luego.
+
+# Ajuste con la distribución binomial
+
+Supongamos que tenemos 10 dispositivos trabajando en paralelo de forma independiente con una cierta probabilidad de que un dispositivo falle un día cualquiera, $p$. Si realmente los dispositivos funcionan de forma independiente y todos ellos tienen la misma probabilidad de fallo, entonces el número de dispositivos que falla en un día cualquiera, $X$, es una variable discreta con distribución binomial de parámetros 10 y $p$, $B(10, p)$
+
+Para tratar de estimar la probabilidad de fallo y comprobar si realmente la variable $X$ sigue una distribución binomial, se recoge un histórico de fallos en días anteriores, que aparece en el fichero *ajusta.binomial.txt*. En él aparecen el número de fallos registrados en los últimos 150 días de funcionamiento del sistema.
+
+Se pide:
+
+1. Estimar la probabilidad de fallo y su error estándar.
+2. Valorar la bondad del ajuste resultante mediante una representación gráfica adecuada y mediante un test de bondad de ajuste.
+
+## Estimación del parámetro
+
+En primer lugar, importamos los datos. Previamente nos aseguramos de habernos situado en el directorio de trabajo donde se haya el fichero de datos:
+```{r}
+datos.binom <- read.delim("ajusta.binomial.txt")
+summary(datos.binom)
+```
+
+La estimación MLE de $p$ en una distribución $B(10, p)$ es $\hat{p} = \bar{x}/10$:
+```{r}
+print(p.est <- mean(datos.binom$x) / 10)
+```
+
+## Estimación del error estándar de la estimación
+
+Viene dada por $s.e.(\hat{p}) \approx \sqrt \frac{\hat{p}(1-\hat{p})}{N}$:
+```{r}
+sqrt(p.est * (1 - p.est) / length(datos.binom$x))
+```
+
+Así que tenemos una estimación de la probabilidad de fallo de `r round(p.est, 2)`, con un error estandar estimado de `r round(sqrt(p.est * (1 - p.est) / length(datos.binom$x)), 2)`. A veces se expresa de la siguiente forma: *"tenemos una estimación de la probabilidad de fallo de `r round(p.est, 2)` (error estandar `r round(sqrt(p.est * (1 - p.est) / length(datos.binom$x)), 2)`)"*
+
+## Bondad del ajuste
+
+Por tanto, estamos diciendo que para los datos de la muestra creemos que un ajuste adecuado puede ser el que proporciona una distribución binomial de parámetros $n=10$ y $p=$ `r round(p.est, 2)`. Lo que nos preocupa ahora es valorar si, en efecto, ese ajuste es adecuado o no.
+
+En primer lugar, vamos a representar gráficamente un diagrama de barras (basado en un histograma, como aprendimos anteriormente) y, sobre él, vamos a añadir las frecuencias esperadas según el modelo binomial ajustado:
+```{r}
+# Puntos de corte para el histograma
+ptos.corte <- -0.5:10.5
+# Diagrama de barras
+diagrama.binom <- hist(datos.binom$x, breaks = ptos.corte, main = "", xlab = "Número de fallos", ylab = "Frecuencia")
+# Función masa del ajuste
+x <- 0:10
+num.datos <- length(datos.binom$x)
+y <- num.datos * dbinom(0:10, 10, p.est)
+lines(x, y)
+```
+
+Ese gráfico pone de manifiesto diferencias evidentes entre las frecuencias de valores en la muestra,
+```{r}
+diagrama.binom$counts
+```
+
+y la frecuencia de valores que el modelo dice que debería haber,
+```{r}
+round(num.datos * dbinom(0:10, 10, p.est), 2)
+```
+
+Por ejemplo, tenemos 21 ceros, mientras que el modelo dice que debería haber alrededor de 27 (frecuencia esperada 26.84).
+
+Ahora bien, esas diferencias ¿son suficientes para afirmar que el ajuste es inadecuado o sólo ponen de manifiesto disparidades debidas a que tenemos una muestra aleatoria de sólo 150 datos? La respuesta la proporciona el contraste de bondad de ajuste.
+
+En el caso de distribuciones discretas, vamos a utilizar el contraste $\chi^2$. Lo que hace este contraste es comparar las frecuencias observadas con las esperadas, según el siguiente estadístico:
+$$
+\chi^2 = \sum_{i=1}^k \frac{(O_i - E_i)^2}{E_i},
+$$
+
+donde $O_i$ representa las frecuencias observadas, las que proporciona el diagrama de barras, y $E_i$ representa las frecuencias esperadas según el modelo, las que proporciona la función masa teórica ajustada.
+
+Una vez que se calcule el valor de ese estadístico tendremos que valorar si ese valor es alto, lo que indicará que el ajuste es malo, o no. Recordemos que habíamos quedado en que consideraríamos *alto* y, por tanto, indicará un mal ajuste, a los valores del estadístico por encima del percentil 95 de la distribución del estadístico.
+
+Para aproximar la distribución del estadístico usaremos también *remuestreo*. Concretamente, lo que se hace es simular muchas veces (por defecto, $B=2000$) muestras que sí se hayan generado a partir de distribuciones $B(10,$ `r p.est`$)$, y se calcula el valor del estadístico en esos ajustes *buenos*. De esa manera, tenemos $B$ valores del estadístico buenos y nuestro valor, que no sabemos si es bueno o no. Si la proporción de valores *buenos* del estadístico es inferior al 5%, será que nuestro estadístico está por encima del percentil 95. Recordemos de nuevo que a la proporción de valores del estadístico por encima de nuestro valor del estadístico se le llama **p-valor**, de manera que la regla de decisión es:
+
+- Si el p-valor es inferior a 0.05 (5%), indica que nuestro estadístico está por encima del percentil 95, lo que significa que nuestro ajuste es inadecuado.
+- Si el p-valor es superior a 0.05 (5%), indica que nuestro estadístico está por debajo del percentil 95, lo que significa que nuestro ajuste es aceptable. 
+- Además, tanto mayor sea el p-valor, mejor es el ajuste.
+
+R permite calcularlo todo con la función *chisq.test*, de la siguiente forma:
+```{r}
+# Probabilidades que da la función masa ajustada:
+probs <- dbinom(0:10, 10, p.est)
+# Contraste de bondad de ajuste
+print(gof <- chisq.test(diagrama.binom$counts, p = probs, simulate.p.value = TRUE))
+```
+
+Como podemos ver, el valor del estadístico es `r round(gof$statistic, 2)` y, dado que el p-valor es `r round(gof$p.value, 2)`, ese valor está claramente por encima del percentil 95, así que nuestro ajuste, como se intuía en el gráfico, no es aceptable.
+
+¿Qué quiere decir que el ajuste no es aceptable? Recordemos que el modelo binomial supone que
+
+a. las observaciones (los dispositivos) son independientes y 
+b. la probabilidad de éxito (la probabilidad de fallo de un dispositivo) es constante. 
+
+Así pues, alguna de estas dos hipótesis ha debido fallar, cuando el ajuste no es aceptable.
+
+# Ajuste con la distribución de Poisson
+
+Supongamos ahora que $X$ representa el número de fallos que se producen a la hora en una máquina que fabrica componentes, sólo que ahora no vamos a suponer que la media es 2.5 fallos/hora, sino que vamos a tratar de estimar esa media con los datos de las últimas 125 horas de las que se tiene información. Si los fallos se producen de forma independiente y siempre con esa media de fallos a la hora, entonces $X$ seguirá una distribución de Poisson.
+
+Para tratar de estimar la media de fallos a la hora y comprobar si realmente la variable $X$ sigue una distribución de Poisson, recogemos ese histórico de fallos en las últimas 125 horas, que aparece en el fichero *ajusta.poisson.txt*. En él aparecen el número de fallos registrados por hora en las últimas 125 horas de funcionamiento del sistema.
+
+Se pide:
+
+1. Estimar la media de fallos a la hora y su error estándar.
+2. Valorar la bondad del ajuste resultante mediante una representación gráfica adecuada y mediante un test de bondad de ajuste.
+
+## Estimación del parámetro
+
+En primer lugar, importamos los datos. Previamente nos aseguramos de habernos situado en el directorio de trabajo donde se haya el fichero de datos:
+```{r}
+datos.pois <- read.delim("ajusta.poisson.txt")
+summary(datos.pois)
+```
+
+La estimación MLE de $\lambda$ en una distribución $P(\lambda)$ es $\hat{\lambda} = \bar{x}$:
+```{r}
+print(lam.est <- mean(datos.pois$x))
+```
+
+## Estimación del error estándar de la estimación
+
+Viene dada por $s.e.(\hat{\lambda}) \approx \frac{s_{N-1}}{\sqrt N}$:
+```{r}
+sd(datos.pois$x) / sqrt(length(datos.pois$x))
+```
+
+Así que tenemos una estimación de la media de fallos a la hora de `r lam.est`, con un error estandar estimado de `r round(sd(datos.pois$x) / sqrt(length(datos.pois$x)), 2)`, lo que podemos expresar como *"tenemos una estimación de la media de fallos a la hora de `r lam.est` (error estandar `r round(sd(datos.pois$x) / sqrt(length(datos.pois$x)), 2)`)"*
+
+## Bondad del ajuste
+
+Por tanto, estamos diciendo que para los datos de la muestra creemos que un ajuste adecuado puede ser el que proporciona una distribución de Poisson de parámetro `r lam.est`. Lo que nos preocupa ahora de nuevo es valorar si, en efecto, ese ajuste es adecuado o no.
+
+En primer lugar, vamos a representar gráficamente el diagrama de barras y, sobre él, las frecuencias esperadas según el modelo Poisson ajustado:
+```{r}
+# Puntos de corte del histograma
+a <- min(datos.pois$x)
+b <- max(datos.pois$x)
+ptos.corte <- (a - 0.5):(b + 0.5)# La Poisson no tiene rango finito
+# Histograma (diagrama de barras)
+diagrama.pois <- hist(datos.pois$x, breaks = ptos.corte, main = "", xlab = "Número de fallos a la hora", ylab = "Frecuencia")
+# Función masa ajustada
+x <- a:b
+num.datos <- length(datos.pois$x)
+y <- num.datos * dpois(x, lam.est)
+lines(x, y)
+```
+
+Ese gráfico pone de manifiesto bastante similitud entre las frecuencias de valores en la muestra,
+```{r}
+diagrama.pois$counts
+```
+
+y la frecuencia de valores que el modelo dice que debería haber,
+```{r}
+round(num.datos * dpois(a:b, lam.est), 2)
+```
+
+¿Podemos entonces concluir que es un *buen* modelo el de Poisson para esos datos. La respuesta la proporciona el contraste de bondad de ajuste.
+
+En este caso tenemos un problema:
+
+1. La distribución binomial estaba claramente definida: va de 0 a $n$, siendo $n$ el parámetro que especifica el número de experimientos. A la hora de dar las probabilidades esperadas, estaba claro que tienen que ir desde la probabilidad de 0 a la probabilidad de $n$, y que la suma de las probabilidades esperadas es 1.
+2. Sin embargo, la distribución de Poisson no tiene un soporte finito, no tiene cota superior. Nosotros hemos obtenido las probabilidades y las frecuencias esperadas desde el mínimo hasta el máximo, pero la suma de esas probabilidades, por ejemplo, no es uno, ya que hay otros valores que no han salido en esta muestra, pero que pueden salir en otra muestra. Si tratamos de aplicar *chisq.test* como antes, nos va a dar un error, porque tenemos que utilizar *chisq.test* con un vector de probabilidades completo, que sume 1.
+
+Entonces, consideramos una nueva frecuencia para el *resto de valores posibles*:
+```{r}
+# Frecuencias observadas de 'a' a 'b', y el resto de valores tienen frecuencia observada 0
+observadas <- c(diagrama.pois$counts, 0) 
+# Probabilidades de los valores de 'a' a 'b', y el resto de valores tiene la probabilidad restante hasta 1:
+probs <- c(dpois(a:b, lam.est), 1 - sum(dpois(a:b, lam.est)))
+print(test.pois <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+```
+
+Como podemos ver, el valor del estadístico es `r round(test.pois$statistic, 2)` y, dado que el p-valor es `r round(test.pois$p.value, 2)`, ese valor está claramente por debajo del percentil 95, así que nuestro ajuste, como se intuía en el gráfico, es aceptable.
+
+# Ajuste con la distribución geométrica
+
+Supongamos ahora que $Y$ es la variable que cuenta el número de días que un dispositivo funciona bien hasta que al día siguiente falla. Si los fallos se producen de forma independiente y siempre con la misma probabilidad, $p$, entonces $Y$ seguirá una distribución geométrica con ese parámetro.
+
+Para tratar de estimar la probabilidad de fallo y comprobar si realmente la variable $Y$ sigue una distribución geométrica, recogemos un histórico de tiempos (en días) hasta el fallo en los últimos 36 fallos, que aparece en el fichero *ajusta.geom.txt*. 
+
+Se pide:
+
+1. Estimar la probabilidad de fallo y su error estándar.
+2. Valorar la bondad del ajuste resultante mediante una representación gráfica adecuada y mediante un test de bondad de ajuste.
+
+## Estimación del parámetro
+
+En primer lugar, importamos los datos. Previamente nos aseguramos de habernos situado en el directorio de trabajo donde se haya el fichero de datos:
+```{r}
+datos.geom <- read.delim("ajusta.geom.txt")
+summary(datos.geom)
+```
+
+La estimación MLE de $p$ en una distribución $Geo(p)$ es $\hat{p} = \frac{1}{1 + \bar{x}}$:
+```{r}
+print(p.est <- 1 / (1 + mean(datos.geom$y)))
+```
+
+## Estimación del error estándar de la estimación
+
+Viene dada por $s.e.(\hat{p}) \approx \sqrt \frac{\hat{p}(1-\hat{p})}{N}$:
+```{r}
+sqrt(p.est * (1 - p.est) / length(datos.geom$y))
+```
+
+Así que tenemos una estimación de la probabilidad de fallo de `r round(p.est, 2)`, con un error estandar estimado de `r round(sqrt(p.est * (1 - p.est) / length(datos.geom$y)), 2)`, lo que podemos expresar como *tenemos una estimación de la probabilidad de fallo `r round(p.est, 2)` (error estandar `r round(sqrt(p.est * (1 - p.est) / length(datos.geom$y)), 2)`)*.
+
+## Bondad del ajuste
+
+Por tanto, estamos diciendo que para los datos de la muestra creemos que un ajuste adecuado puede ser el que proporciona una distribución goemétrica de parámetro `r round(p.est, 2)`. Lo que nos preocupa ahora de nuevo es valorar si, en efecto, ese ajuste es adecuado o no.
+
+En primer lugar, representar gráficamente el diagrama de barras y, sobre él, las frecuencias esperadas según el modelo ajustado de la distribución geométrica:
+```{r}
+a <- min(datos.geom$y)
+b <- max(datos.geom$y)
+ptos.corte <- (a - 0.5):(b + 0.5)# La Geométrica no tiene rango finito
+diagrama.geom <- hist(datos.geom$y, breaks = ptos.corte, main = "", xlab = "Número de días entre dos fallos", ylab = "Frecuencia")
+x <- a:b
+num.datos <- length(datos.geom$y)
+y <- num.datos * dgeom(x, p.est)
+lines(x, y)
+```
+
+Ese gráfico pone de manifiesto bastantes diferencias entre las frecuencias de valores en la muestra,
+```{r}
+diagrama.geom$counts
+```
+
+y la frecuencia de valores que el modelo dice que debería haber,
+```{r}
+round(num.datos * dgeom(a:b, p.est), 2)
+```
+
+¿Debemos entonces concluir que es un *mal* modelo el de la geométrica para esos datos. La respuesta la proporciona el contraste de bondad de ajuste.
+
+En este caso tenemos el mismo problema de completar las frecuencias para que sumen 1:
+```{r}
+observadas <- c(diagrama.geom$counts, 0)
+probs <- c(dgeom(a:b, p.est), 1 - sum(dgeom(a:b, p.est)))
+print(test.geom <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+```
+
+Como podemos ver, el valor del estadístico es `r round(test.geom$statistic, 2)` y, dado que el p-valor es `r round(test.geom$p.value, 2)`, ese valor está claramente por debajo del percentil 95, así que nuestro ajuste, **a pesar de lo que parecía en el gráfico**, es aceptable.
+
+# Ajuste con la distribución binomial negativa
+
+En este caso, en vez de coger el ejemplo de la práctica anterior, vamos a utilizar el mismo que hemos propuesto aquí para la distribución de Poisson. 
+
+La distribución binomial negativa, cuando su primer parámetro no es un número entero, se utiliza como un modelo más general que la de Poisson, concretamente, se utiliza cuando la media de la distribución de Poisson no es constante, sino que puede variar de unos individuos a otros. Por eso la idea es ajustar a los mismos datos una distribución binomial negativa y comparar los ajustes.
+
+## Estimación del parámetro
+
+El problema que nos encontramos ahora es que no existe una fórmula explícita para el estimador MLE de los parámetros. Es la primera vez que nos pasa, pero es bueno que sepáis que, fuera de las distribuciones que manejamos nosotros, lo normal es que tampoco haya fórmulas, y que, como vamos a hacer nosotros aquí, se deban utilizar métodos numéricos para obtener las estimaciones.
+
+Vamos a definir, primero de todo, la función de log-verosimilitud. Recordemos que la función masa de la binomial negativa es
+$$
+f(x) = \frac{\Gamma(a+x)}{\Gamma(a) \Gamma(x+1)} p^a (1-p)^x
+$$
+
+por lo que su logaritmo es
+$$
+\log(f(x)) = \log(a+x) - \log(a) -\log(x+1) + a \log(p) + x \log(1-p)
+$$
+
+Entonces, la función de log-verosimilitud que tenemos que maximizar es $sum_{i=1}^N \log(f(x_i))$:
+$$
+\log L (a, p) = \sum_{i=1}^N {\log(a+x_i)+x_i \log(1-p)} + N(a \log(p) - \log(a) - \log(x+1))
+$$
+
+A la hora de definir esta función en R vamos a introducir en realidad el opuesto de la función, es decir, la función con signo negativo. La razón es que el algoritmo de optimización que vamos a emplear sólo sirve para buscar mínimos, y a nosotros nos da lo mismo buscar el máximo de $\log L$ que el mínimo de $-\log L$:
+```{r}
+# Datos de la muestra y número de datos
+x <- datos.pois$x
+N <- length(x)
+# Opuesto de la función de log-verosimilitud
+logL <- function(pars){
+  a <- pars[1]
+  p <- pars[2]
+  - (sum(log(gamma(a + x)) + x * log(1 - p) - log(gamma(x+1))) + N * (a * log(p) - log(gamma(a))))
+}
+```
+
+Ahora vamos a buscar el máximo de esta función con la función *optim*. Lo único que es obligatorio especificar al usar esta función, aparte, obviamente, de la función a optimizar, es un valor inicial de los parámetros que estamos buscando. **En teoría**, estos valores iniciales no deben influir en la solución final, así que vamos a poner unos valores *fáciles*:
+```{r, warning=F}
+# Valores iniciales de los parámetros
+a0 <- 1
+p0 <- 0.5
+# Optimización de la función de log-verosimilitud
+mle.nbinom <- optim(par = c(a0, p0), fn = logL)$par
+# Estimaciones MLE
+mle.nbinom
+```
+
+Así pues, tenemos estimaciones $\hat{a}=$ `r round(mle.nbinom[1], 2)` y $\hat{p}=$ `r round(mle.nbinom[2], 2)`. 
+
+## Estimaciones de los errores estándar
+
+Para obtener estimaciones de los errores estándar a partir de estimaciones MLE, normalmente se utiliza una fórmula teórica que se deduce de un teorema muy importante relacionado con la estimación MLE, llamada *cota de Cramer-Rao*. Como nosotros no conocemos ese teorema, y excede los contenidos de la asignatura, vamos a utilizar los medios a nuestro alcance.
+
+Lo que vamos a hacer es utilizar remuestro sobre los datos para obtener, por ejemplo, $B=200$ simulaciones de estimaciones MLE, basadas en réplicas de nuestra muestra de datos, de manera que el error estándar será la desviación típica de esas simulaciones:
+```{r, warning=F}
+# Número de réplicas de la muestra:
+B <- 200
+# Vectores vacíos para los a's y los p's:
+as <- numeric() 
+ps <- numeric() 
+# Replicando:
+for (i in 1:B){
+  # Réplica de los datos:
+  x <- sample(datos.pois$x, replace = TRUE) 
+  N <- length(x)
+  # Función de log-verosimilitud en la réplica:
+  logL <- function(pars){
+    a <- pars[1]
+    p <- pars[2]
+    - (sum(log(gamma(a + x)) + x * log(1 - p) - log(gamma(x+1))) + N * (a * log(p) - log(gamma(a))))
+  }
+  # Buscando los MLE en la réplica:
+  mle.replica <- optim(par = c(1, 0.5), fn = logL)$par 
+  # Nuevos valores simulados de estimaciones MLE, basados en la réplica:
+  as[i] <- mle.replica[1]
+  ps[i] <- mle.replica[2]
+}
+```
+
+Ahora, por pura curiosidad, veamos cómo se distribuyen las réplicas de las estimaciones:
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+hist(as, xlab = 'Réplicas de la estimación de a', main = "")
+hist(ps, xlab = 'Réplicas de la estimación de p', main = "")
+```
+
+Lo cierto es que no tiene muy buena pinta, porque observamos enormes diferencias entre unos valores y otros, lo que parece indicar que las estimaciones no son muy precisas: ¿cómo de imprecisas son? El valor aproximado de los errores estándar es:
+```{r}
+sd(as)
+sd(ps)
+```
+
+En resumen, tenemos estimaciones $\hat{a}=$ `r round(mle.nbinom[1], 2)` y $\hat{p}=$ `r round(mle.nbinom[2], 2)`, con errores estándar estimados de `r round(sd(as), 2)` (bastante alto) y `r round(sd(ps), 2)`. En honor a la verdad, hay que decir que se pueden introducir mejoras en esta forma de estimar los parámetros de la distribución binomial negativa.
+
+## Bondad del ajuste
+
+En primer lugar, comparemos las frecuencias observadas con las esperadas en un gráfico. Además, vamos a poner a la izquierda el ajuste que teníamos de la Poisson y a la derecha el que hemos logrado con la binomial negativa:
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+# Ajuste Poisson
+a <- min(datos.pois$x)
+b <- max(datos.pois$x)
+ptos.corte <- (a - 0.5):(b + 0.5)
+diagrama.pois <- hist(datos.pois$x, breaks = ptos.corte, main = "Ajuste Poisson", xlab = "Número de fallos a la hora", ylab = "Frecuencia")
+x <- a:b
+num.datos <- length(datos.pois$x)
+y <- num.datos * dpois(x, lam.est)
+lines(x, y)
+# Ajuste binomial negativo
+a <- min(datos.pois$x)
+b <- max(datos.pois$x)
+ptos.corte <- (a - 0.5):(b + 0.5)
+diagrama.nbinom <- hist(datos.pois$x, breaks = ptos.corte, main = "Ajuste BN", xlab = "Número de fallos a la hora", ylab = "Frecuencia")
+x <- a:b
+num.datos <- length(datos.pois$x)
+y <- num.datos * dnbinom(x, mle.nbinom[1], mle.nbinom[2])
+lines(x, y)
+```
+
+¡Parecen prácticamente idénticos! Eso es porque la distribución binomial negativa tiende a la distribución de Poisson cuando el parámetro $a$ tiende a infinito, y el valor estimado de $a$ es bastante alto. 
+
+¿Y qué dice al respecto el test $\chi^2$?
+```{r}
+# Contraste del ajuste Poisson
+observadas <- c(diagrama.pois$counts, 0)
+probs <- c(dpois(a:b, lam.est), 1 - sum(dpois(a:b, lam.est)))
+print(test.pois <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+# Contraste del ajuste BN
+observadas <- c(diagrama.nbinom$counts, 0) 
+probs <- c(dnbinom(a:b, mle.nbinom[1], mle.nbinom[2]), 1 - sum(dnbinom(a:b, mle.nbinom[1], mle.nbinom[2])))
+print(test.nbinom <- chisq.test(observadas, p = probs, simulate.p.value = TRUE))
+```
+
+Ambos son ajustes razonables, a la luz de sus p-valores altos, `r round(test.pois$p.value, 2)` y `r round(test.nbinom$p.value, 2)`. Podríamos decir que será mejor el que obtenga mayor p-valor, pero hay otro aspecto a tener en cuenta: la distribución de Poisson es más simple que la binomial negativa y proporciona un ajuste similar. Aplicando el principio de parsimonia, puestos a elegir, deberíamos quedarnos con la Poisson.
+
+# Distribución exponencial
+
+Recordemos que si el número de fallos que se producen a la hora en una máquina que fabrica componentes sigue una distribución de Poisson de parámetro (media) $\lambda$, sabemos que el tiempo, $T$, entre dos fallos, sigue entonces una distribución exponencial del mismo parámetro.
+
+Vamos a suponer que lo que hemos contabilizado no ha sido el número de fallos a la hora en un intervalo de 125 horas, sino el tiempo que ha pasado entre los últimos 76 fallos, datos que se encuentran en el fichero *ajusta.exp.txt*.
+
+Se trata, como siempre, de 
+
+a. estimar el parámetro de una distribución, en este caso exponencial, que ajuste los datos,
+b. estimar el error estándar de esa estimación y
+c. valorar desde un punto de vista gráfico y de un contraste de bondad de ajuste si el ajste logrado es razonable.
+
+## Estimación del parámetro
+
+Importamos los datos y utilizamos la fórmula conocida del estimador MLE de $\lambda$:
+```{r}
+datos.exp <- read.delim("ajusta.exp.txt")
+print(lam.est <- 1 / mean(datos.exp$x))
+```
+
+## Estimación del error estándar
+
+De nuevo no tenemos fórmula para el error estándar, así que ahora lo vamos a estimar por remuestreo, como hemos hecho en la binomial negativa. Realizamos $B=200$ estimaciones simuladas a partir del remuestro de los datos y aproximamos el error estandar como la desviación típica de esas estimaciones simuladas:
+```{r}
+B <- 200 
+lams <- numeric()
+for (i in 1:B){
+  x <- sample(datos.exp$x, replace = TRUE) 
+  lams[i] <- 1 / mean(x) 
+}
+sd(lams)
+```
+
+Así pues, tenemos una estimación MLE de $\lambda$ de `r round(lam.est, 2)`, con un error estandar estimado de `r round(sd(lams), 2)`.
+
+## Bondad del ajuste
+
+Ahora tenemos una distribución continua, la exponencial, así que no hay que preocuparse de los puntos de corte del histograma. Lo que sí tenemos que hacer es cambiar la escala del histograma para que esté en la misma escala que la función de densidad.
+
+Vamos a incluir otro gráfico para valorar la bondad del ajuste, que está relacionado con el contraste de bondad de ajuste que vamos a comentar ahora mismo: queremos la función de distribución teórica junto con la empírica, es decir, la de los datos:
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+# Histograma y densidad
+hist(datos.exp$x, freq = FALSE, xlab = "Tiempos entre fallos", main = "Histograma y función de densidad", cex.main = 0.5)
+# Ordenamos los datos para la figura:
+x <- sort(datos.exp$x)
+# Función de densidad en los datos ordenados de la muestra:
+y.dens <- dexp(x, lam.est)
+lines(x, y.dens, col = 2)
+# Funciones de distribución teórica y empírica:
+y.teor <- pexp(x, lam.est)
+y.emp <- (1:length(x)) / length(x)
+# Función de distribución teórica:
+plot(x, y.teor, type = 'l', col = 2, xlab = "Tiempos entre fallos", main = "Funciones de distribución empírica y teórica", cex.main = 0.5)
+# Función de distribución empírica, en forma de escalera:
+lines(x, y.emp, type = "S")
+```
+
+La comparación de las funciones de distribución teórica y empírica permite ver con más detalle dónde hay discrepancia entre lo que dicen los datos y lo que se espera según el modelo. Por ejemplo, alrededor de 1.4 ya se han producido todos los fallos, pero 1.4 está sólo ligeramente por encima del percentil 90 de la distribución teórica.
+
+El contraste de bondad de ajuste que vamos a emplear, llamado de Kolmogorov-Smirnoff, lo que hace precisamente es buscar la máxima diferencia entre las dos funciones de distribución: si esa diferencia es grande, deberemos rechazar el ajuste por inapropiado; pero si esa diferencia no es grande, podemos dar por bueno el ajuste.
+
+Esta metodología nos devuelve al problema de qué consideramos como diferencia *grande*. Ya hemos comentado que lo que debemos hacer es contextualizar el valor que obtengamos, en este caso de la distancia entre las curvas, dentro de su distribución de probabilidad: si ese valor ocupa un percentil alto, concretamente, por encima del percentil 95, rechazaremos el ajuste.
+
+La función *chisq.test* que hemos utilizado hasta ahora tenía ya implementado el proceso de remuestreo para hacer ella todo el trabajo: lo pedíamos cuando poníamos la opción *simulate.p.value = TRUE*. Sin embargo, la función que vamos a utilizar ahora no tiene esta opción, así que nos toca incluirla a nosotros.
+
+Lo que vamos a hacer se parece al remuestreo que hemos hecho hasta ahora, pero con matices. Se trata de que vamos a simular, puesto que podemos hacerlo, datos de la distribución teórica ajustada, y con esos datos simulados, obtenemos una nueva distancia entre curvas:
+```{r}
+# Distancia máxima entre las dos curvas. Especificamos los datos, la función de distribución teórica y los parámetros estimados
+print(dist <- ks.test(datos.exp$x, pexp, lam.est)$statistic)
+
+# Simulamos otras B distancias:
+B <- 200
+N <- length(datos.exp$x)
+dists <- numeric(B)
+for (i in 1:B){
+  x <- rexp(N, lam.est)
+  dists[i] <- ks.test(x, pexp, 1 / mean(x))$statistic
+}
+# El p-valor es la proporción de distancias simuladas superiores a la de nuestros datos
+print(p.value <- sum(dist < dists) / B)
+```
+
+El resultado muestra que la distancia entre nuestras curvas ocupa un percentil muy bajo, indicando que están muy próximas, así que el ajuste puede considerarse adecuado. Sólo si el p-valor hubiera sido inferior a 0.05, indicando que la distancia entre nuestras curvas está por encima del percentil 95 de las distancias esperadas, habríamos rechazado el ajuste.
+
+Una última cuestión relativa al contraste de Kolmogorov-Smirnof: la función *ks.test* proporciona como resultado un p-valor, *$p.value*. Sin embargo, no debemos hacerle caso, porque sólo es válido para distribuciones que no tienen parámetros estimados.
+
+# Distribución Gamma
+
+Vamos a utilizar los mismos datos de tiempos de fallo que en el ejemplo de la distribución exponencial para comparar los ajustes.
+
+## Estimación de los parámetros
+
+Como en el caso de la distribución binomial negativa, tenemos que utilizar métodos numéricos para obtener el máximo de la función de log-verosimilitud. Vamos con ella.
+
+La función de densidad es
+$$
+f(x) = \frac{\lambda^{a} x^{a - 1} e^{-\lambda x}} {\Gamma(a)}
+$$
+
+Por tanto, la función de log-verosimilitud es
+$$
+logL(a, \lambda) = \sum_{i=1}^N ((a-1)\log(x_i) - \lambda x_i) + N(a \log{\lambda} - log(\Gamma(a)))
+$$
+
+Ya sabemos que tenemos que definir el opuesto de esta función para minimizarlo con la función *optim*:
+```{r, warning = FALSE}
+# Opuesto de la log-verosimilitud
+x <- datos.exp$x
+N <- length(x)
+logL <- function(pars){
+  a <- pars[1]
+  lam <- pars[2]
+  - (sum((a - 1)* log(x) - lam * x) + N * (a * log(lam) - log(gamma(a))))
+}
+# Valores iniciales 'sencillos'
+a0 <- 1
+lam0 <- 1
+# Optimización
+print(mle.gamma <- optim(par = c(a0, lam0), fn = logL)$par)
+```
+
+## Errores estándar
+
+De nuevo debemos aproximarlos por remuestreo, estimando en cada réplica que hagamos de nuestros datos y obteniendo la desviación típica de las réplicas:
+```{r}
+B <- 200 
+as <- numeric()
+lams <- numeric()
+
+for (i in 1:B){
+  x <- sample(datos.exp$x, replace = TRUE) 
+  N <- length(x)
+  
+  logL <- function(pars){
+    a <- pars[1]
+    lam <- pars[2]
+    - (sum((a - 1)* log(x) - lam * x) + N * (a * log(lam) - log(gamma(a))))
+    }
+  mle.replica <- optim(par = c(1, 1), fn = logL)$par 
+  
+  as[i] <- mle.replica[1]
+  lams[i] <- mle.replica[2]
+}
+c(sd(as), sd(lams))
+```
+
+Por tanto, las estimaciones MLE de $a$ y $\lambda$ son `r round(mle.gamma[1], 2)` y `r round(mle.gamma[2], 2)`, con errores estándar aproximados de `r round(sd(as), 2)` y `r round(sd(lams), 2)` respectivamente.
+
+## Bondad del ajuste
+
+Nos toca valorar la bondad del ajuste, de forma gráfica y numérica. Como en el caso de la exponencial, queremos dos figuras, para comparar el histograma y la función de distribución ajustadas con sus homólogos muestrales. Además, ahora vamos a añadir en otro color (verde) las funciones del ajuste de la exponencial:
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+
+hist(datos.exp$x, freq = FALSE, xlab = "Tiempos entre fallos", main = "Histograma y función de densidad", cex.main = 0.5)
+x <- sort(datos.exp$x)
+y.dens1 <- dgamma(x, mle.gamma[1], mle.gamma[2])
+y.dens2 <- dexp(x, lam.est)
+lines(x, y.dens1, col = 2)
+lines(x, y.dens2, col = 3)
+
+y.teor1 <- pgamma(x, mle.gamma[1], mle.gamma[2])
+y.teor2 <- pexp(x, lam.est)
+y.emp <- (1:length(x)) / length(x)
+plot(x, y.teor1, type = 'l', col = 2, xlab = "Tiempos entre fallos", main = "Funciones de distribución empírica y teórica", cex.main = 0.5)
+lines(x, y.teor2, col = 3)
+lines(x, y.emp, type = "S")
+```
+
+Podemos decir que:
+
+1. El ajuste mediante la distribución Gamma parece ser bueno.
+2. Es prácticamente el mismo ajuste que el de la distribución exponencial.
+
+Eso ya lo podíamos intuir mirando los parámetros ajustados, ya que una $Gamma(1, \lambda)$ es una $exp(\lambda)$, y tenemos que el parámetro $a$ estimado es `r round(mle.gamma[1], 2)`.
+
+Finalmente, vamos a calcular el p-valor del contraste de Kolmogorov-Smirnof para valorar la bondad del ajuste numéricamente:
+```{r}
+# Distancia máxima entre las dos curvas
+print(dist <- ks.test(datos.exp$x, pgamma, mle.gamma[1], mle.gamma[2])$statistic)
+
+# Simulamos otras B distancias:
+B <- 200
+N <- length(datos.exp$x)
+dists <- numeric(B)
+for (i in 1:B){
+  # Muestra simulada:
+  x <- rgamma(N, mle.gamma[1], mle.gamma[2])
+  # Estimaciones en la muestra simulada:
+  logL <- function(pars){
+    a <- pars[1]
+    lam <- pars[2]
+    - (sum((a - 1)* log(x) - lam * x) + N * (a * log(lam) - log(gamma(a))))
+  }
+  # Estimaciones en la réplica:
+  mle.simula <- optim(par = c(1, 1), fn = logL)$par 
+  dists[i] <- ks.test(x, pgamma, mle.simula[1], mle.simula[2])$statistic
+}
+
+# El p-valor es la proporción de distancias simuladas superiores a la de nuestros datos
+print(p.value <- sum(dist < dists) / B)
+```
+
+El p-valor es muy similar al de la distribución exponencial ajustada. Por lo tanto, el ajuste es bueno, pero si podemos elegir, nos quedamos con el de la exponencial, que es tan bueno como éste de la Gamma y es más sencillo, al tener sólo un parámetro a ajustar.
+
+# Distribución normal
+
+En este último ejemplo quiero que forcemos un ajuste que no sea bueno. En ese sentido, teniendo en cuenta la forma de la distribución de los datos que hemos ajustado con una exponencial y una Gamma, es evidente que una normal no va a ser adecuada. Lo que quiero es que nuestro análisis así lo demuestre.
+
+## Estimación de los parámetros
+
+Por fortuna, tenemos fórmula para las estimaciones MLE:
+```{r}
+mu.est <- mean(datos.exp$x)
+sigma.est <- sum((datos.exp$x - mu.est)^2) / length(datos.exp$x)
+print(c(mu.est, sigma.est))
+```
+
+## Estimaciones de los errores estándar
+
+Par la estimación de $\mu$ tenemos que el error estándar se aproxima con $s_{N-1} / \sqrt{N}$:
+```{r}
+print(se.mu <- sd(datos.exp$x) / sqrt(length(datos.exp$x)))
+```
+
+pero necesitamos estimar el error estándar de $\hat{\sigma}$, y lo hacemos por remuestreo:
+```{r}
+B <- 200 
+sigmas <- numeric()
+
+for (i in 1:B){
+  x <- sample(datos.exp$x, replace = TRUE) 
+  sigmas[i] <- sum((datos.exp$x - mean(x))^2) / length(datos.exp$x)
+}
+sd(sigmas)
+```
+
+Por tanto, estamos ajustando con una distribución normal en la que hemos estimado que $\hat{\mu} =$ `r round(mu.est, 2)` (error estándar `r round(se.mu, 2)`) y que $\hat{\sigma} $ es `r round(sigma.est, 2)` (error estándar `r round(sd(sigmas), 2)`).
+
+## Bondad del ajuste
+
+Vamos primero con la representación gráfica. En rojo ponemos lo relativo a la normal y en verde a la exponencial:
+```{r}
+par(mfrow = c(1, 2), xpd = TRUE)
+
+hist(datos.exp$x, freq = FALSE, xlab = "Tiempos entre fallos", main = "Histograma y función de densidad", cex.main = 0.5)
+x <- sort(datos.exp$x)
+y.dens1 <- dnorm(x, mu.est, sigma.est)
+y.dens2 <- dexp(x, lam.est)
+lines(x, y.dens1, col = 2)
+lines(x, y.dens2, col = 3)
+
+y.teor1 <- pnorm(x, mu.est, sigma.est)
+y.teor2 <- pexp(x, lam.est)
+y.emp <- (1:length(x)) / length(x)
+plot(x, y.teor1, type = 'l', col = 2, xlab = "Tiempos entre fallos", main = "Funciones de distribución empírica y teórica", cex.main = 0.5)
+lines(x, y.teor2, col = 3)
+lines(x, y.emp, type = "S")
+```
+
+Es muy evidente que el ajuste con la normal no hay por dónde cogerlo, pero vamos a que lo ratifique el contraste de Kolmogorov-Smirnoff:
+```{r}
+print(dist <- ks.test(datos.exp$x, pnorm, mu.est, sigma.est)$statistic)
+
+B <- 200
+N <- length(datos.exp$x)
+dists <- numeric(B)
+for (i in 1:B){
+  x <- rnorm(N, mu.est, sigma.est)
+  
+  mu.sim <- mean(x)
+  sigma.sim <- sum((x - mu.sim)^2) / length(x)
+}
+
+print(p.value <- sum(dist < dists) / B)
+```
+
+El p-valor aproximado es 0, lo que implica que el ajuste es totalmente inaceptable.
+
+# Ejercicios propuestos
+
+1. Dados los datos de la muestra que aparece en *ajusta.ejercicio1.txt*, se pide:
+  a. Estimar el parámetro $p$ de una distribución binomial con $n=8$ y el error estándar de dicha estimación.
+  b. Obtener una representación gráfica que permita valorar la bondad del ajuste.
+  c. Realizar un contraste de bondad de ajuste y decidir si el ajuste mediante la distribución binomial es aceptable.
+  
+2. Dados los datos de la muestra que aparece en *ajuste.ejercicio2.txt*, se pide:
+  a. Estimar los parámetros de distribuciones Poisson, geométrica y binomial negativa y sus errores estándar.
+  b. Obtener representaciones gráficas (en la misma figura) que permitan valorar la bondad de los ajustes.
+  c. Realizar contrastes de bondad de ajuste para decidir cuáles de los ajustes son aceptables y cuál es el más adecuado para los datos.
+  
+3. Dados los datos de la muestra que aparece en *ajuste.ejercicio3.txt*, se pide:
+  a. Estimar los parámetros de distribuciones exponencial, Gamma y normal y sus errores estándar.
+  b. Obtener representaciones gráficas (en la misma figura) que permitan valorar la bondad de los ajustes.
+  c. Realizar contrastes de bondad de ajuste para decidir cuáles de los ajustes son aceptables y cuál es el más adecuado para los datos.

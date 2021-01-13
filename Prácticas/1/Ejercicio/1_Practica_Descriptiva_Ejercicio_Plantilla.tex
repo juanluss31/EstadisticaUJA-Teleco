@@ -1,0 +1,506 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{lmodern}
+\usepackage{amssymb,amsmath}
+\usepackage{ifxetex,ifluatex}
+\ifnum 0\ifxetex 1\fi\ifluatex 1\fi=0 % if pdftex
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+\urlstyle{same} % disable monospaced font for URLs
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx,grffile}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+
+\title{Prácticas de Estadística\\
+Ejercicio de la Práctica 1\\
+Estadística Descriptiva}
+\author{true}
+\date{25/11/2020}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\hypertarget{presentaciuxf3n-del-ejercicio}{%
+\section{Presentación del
+ejercicio}\label{presentaciuxf3n-del-ejercicio}}
+
+La hoja de datos \emph{airquality} de R contiene una serie de medidas
+sobre variables que desciben la calidad del aire en Nueva York entre
+mayo y septiembre de 1973. Concretamente, hay mediciones del nivel de
+ozono (en ppb), de la radiación solar (en lang), de la velocidad
+promedio del viento (en mph) y de la temperatura máxima diaria (en
+grados Farenhait). Podemos ver todos los detalles sobre estos datos si
+lanzamos a la consola de R \emph{?airquality}. Además, tenemos el día y
+el mes en que se tomó cada medición.
+
+El objetivo del ejercicio es realizar un análisis descriptivo de la
+hoja.
+
+En esta ocasión no es necesario importar la hoja porque ya pertenece al
+entorno de trabajo que, por defecto, se incorpora al lanzar R.
+
+Podemos ver un resumen inicial de todas las variables de esa hoja de
+datos a continuación:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(airquality)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##      Ozone           Solar.R           Wind             Temp      
+##  Min.   :  1.00   Min.   :  7.0   Min.   : 1.700   Min.   :56.00  
+##  1st Qu.: 18.00   1st Qu.:115.8   1st Qu.: 7.400   1st Qu.:72.00  
+##  Median : 31.50   Median :205.0   Median : 9.700   Median :79.00  
+##  Mean   : 42.13   Mean   :185.9   Mean   : 9.958   Mean   :77.88  
+##  3rd Qu.: 63.25   3rd Qu.:258.8   3rd Qu.:11.500   3rd Qu.:85.00  
+##  Max.   :168.00   Max.   :334.0   Max.   :20.700   Max.   :97.00  
+##  NA's   :37       NA's   :7                                       
+##      Month            Day      
+##  Min.   :5.000   Min.   : 1.0  
+##  1st Qu.:6.000   1st Qu.: 8.0  
+##  Median :7.000   Median :16.0  
+##  Mean   :6.993   Mean   :15.8  
+##  3rd Qu.:8.000   3rd Qu.:23.0  
+##  Max.   :9.000   Max.   :31.0  
+## 
+\end{verbatim}
+
+\hypertarget{un-anuxe1lisis-estaduxedstico-descriptivo-sobre-indicadores-climuxe1ticos-del-aire-en-el-nueva-york-de-1973}{%
+\section{Un análisis estadístico descriptivo sobre indicadores
+climáticos del aire en el Nueva York de
+1973}\label{un-anuxe1lisis-estaduxedstico-descriptivo-sobre-indicadores-climuxe1ticos-del-aire-en-el-nueva-york-de-1973}}
+
+\hypertarget{resumen}{%
+\subsection{Resumen}\label{resumen}}
+
+El informe recoge las principales características, desde el punto de
+vista descriptivo, de 4 indicadores relacionados con el clima y la
+calidad del aire en Nueva York, medidos entre mayo y septiembre de 1973:
+cantidad de ozono en el aire, nivel de radiación solar, velocidad del
+viento y temperatura máxima.
+
+\hypertarget{introducciuxf3n}{%
+\subsection{Introducción}\label{introducciuxf3n}}
+
+El clima es un fenómeno complejo sujeto a un alto nivel de incertidumbre
+y observable a través de múltiples indicadores; algunas de estas
+variables climáticas están relacionadas con la calidad del aire en las
+ciudades, como el nivel de ozono.
+
+El punto de partida de este análisis lo constituye una hoja de datos que
+recopila 4 de esos indicadores en la ciudad de Nueva York a lo largo de
+los meses de mayo, junio, julio, agosto y septiembre del año 1973. El
+objetivo general del trabajo es el de proporcionar una visión global
+sobre el clima en Nueva York y sobre la calidad de su aire en lo que
+respecta al nivel de ozono. Como objetivos específicos, proponemos:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Realizar un análisis descriptivo básico que incluya la descripción de
+  la distribución de frecuencias, medidas de posición, dispersión y
+  forma, de los cuatro indicadores que ofrece la hoja: nivel de ozono,
+  radiación solar, velocidad del viento y temperatura máxima diaria.
+\item
+  Detectar qué días del año resultaron atípicos en relación con cada uno
+  de los cuatro indicadores.
+\end{enumerate}
+
+\hypertarget{muxe9todologuxeda}{%
+\subsection{Métodología}\label{muxe9todologuxeda}}
+
+Como hemos comentado, la hoja recoge mediciones recogidas entre mayo y
+septiembre de 1973, en la ciudad de Nueva York, de las siguientes
+variables:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Ozone: nivel medio de ozono en partes por billón desde las 13.00 hasta
+  las 15.00 horas en la Isla de Roosevelt.
+\item
+  Solar.R: radiación solar en Langleys, en la frecuencia de banda de
+  4000???7700 Angstroms desde las 08.00 hasta las 12.00 horas en Central
+  Park.
+\item
+  Wind: velocidad promedio del viento en millas a la hora desde las 7.00
+  hasta las 10.00 horas en el Aeropuerto de La Guardia.
+\item
+  Temp: temperatura máxima diaria en grados Fahrenheit en el aeropuerto
+  de La Guardia.
+\end{enumerate}
+
+Además, dos variables indican el día y el mes de cada medición tomada.
+
+En primer lugar, constataremos que se han recogido medidas todos los
+días del período de observación. A continuación, para cada una de las
+cuatro variables de interés, obtendremos:
+
+\begin{enumerate}
+\def\labelenumi{\arabic{enumi}.}
+\tightlist
+\item
+  Una representación de su distribución de frecuencias. Dado que se
+  trata de variables continuas, la herramienta será el histograma.
+\item
+  Medida de posición: media y cuartiles.
+\item
+  Medida de dispersión: coeficiente de variación.
+\item
+  Medida de forma: coeficiente de asimetría de Fisher.
+\item
+  Diagrama de caja donde puedan identificarse los días atípicos en
+  cuanto al valor de cada variable.
+\end{enumerate}
+
+\hypertarget{resultados}{%
+\subsection{Resultados}\label{resultados}}
+
+En primer lugar, a modo de comprobación, obtenemos una tabla de
+frecuencias absolutas de la variable \emph{mes} para comprobar que se
+han tomado tantas medidas de cada variable como días tienen los meses
+entre mayo y septiembre:
+
+\begin{verbatim}
+## 
+##  5  6  7  8  9 
+## 31 30 31 31 30
+\end{verbatim}
+
+Todo parece indicar que sí se tomaron medidas cada día de cada mes
+
+Las 4 figuras que se muestran a continuación correponden a los
+histogramas de las variables objeto del análisis.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{par}\NormalTok{(}\DataTypeTok{mfrow =} \KeywordTok{c}\NormalTok{(}\DecValTok{2}\NormalTok{, }\DecValTok{2}\NormalTok{))}
+\KeywordTok{hist}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Ozone, }\DataTypeTok{ylab =} \StringTok{"Frecuencias"}\NormalTok{, }\DataTypeTok{xlab =} \StringTok{"Ozono, en ppb"}\NormalTok{, }\DataTypeTok{main =} \StringTok{""}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Solar.R, }\DataTypeTok{ylab =} \StringTok{"Frecuencias"}\NormalTok{, }\DataTypeTok{xlab =} \StringTok{"Radiación solar, en lang"}\NormalTok{, }\DataTypeTok{main =} \StringTok{""}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Wind, }\DataTypeTok{ylab =} \StringTok{"Frecuencias"}\NormalTok{, }\DataTypeTok{xlab =} \StringTok{"Velocidad del viento, en mph"}\NormalTok{, }\DataTypeTok{main =} \StringTok{""}\NormalTok{)}
+\KeywordTok{hist}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Temp, }\DataTypeTok{ylab =} \StringTok{"Frecuencias"}\NormalTok{, }\DataTypeTok{xlab =} \StringTok{"Temperatura máxima diaria, en ºF"}\NormalTok{, }\DataTypeTok{main =} \StringTok{""}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1_Practica_Descriptiva_Ejercicio_Plantilla_files/figure-latex/unnamed-chunk-3-1.pdf}
+
+Por su parte, la tabla siguiente contiene las medidas descriptivas
+mencionadas.
+
+\begin{verbatim}
+##                Ozono Radiación.solar Velocidad.del.viento Temperatura
+## Media     42.1293103     185.9315068            9.9575163  77.8823529
+## P25       18.0000000     115.7500000            7.4000000  72.0000000
+## Me        31.5000000     205.0000000            9.7000000  79.0000000
+## P75       63.2500000     258.7500000           11.5000000  85.0000000
+## CV         0.7830151       0.4843634            0.3538032   0.1215329
+## Coef.asim  1.2098656      -0.4192893            0.3410275  -0.3705073
+\end{verbatim}
+
+\hypertarget{anuxe1lisis}{%
+\subsection{Análisis}\label{anuxe1lisis}}
+
+Del análisis de las distribuciones de frecuencias podemos destacar los
+siguientes aspectos:
+
+\begin{itemize}
+\tightlist
+\item
+  En el ozono la mayoría de los días hay niveles bajos, pero por alguna
+  razón hay unos pocos días en que se dispara.
+\item
+  En la radiación solar parece pasar justo lo contrario: lo más
+  frecuente son días con valores de radiación entre 200 y 300 lang, pero
+  hay algunos días que destacan por su baja radiación. Quizá simplemente
+  son días nublados.
+\item
+  En la velocidad del tiempo y la temperatura máxima diaria, sin
+  embargo, parece que hay unos valores centrales más frecuentes y luego
+  días de observaciones menores o mayores con las mismas frecuencias.
+\end{itemize}
+
+Estas valoraciones tienen que ver con la forma de las distribuciones de
+frecuencias, que analizaremos de forma cuantitativa, mediante el
+coeficiente de asimetría, a continuación.
+
+\hypertarget{ozono}{%
+\subsubsection{Ozono}\label{ozono}}
+
+\href{https://airnow.gov/index.cfm?action=pubs.aqiguideozone}{En este
+enlace} se considera que niveles de ozono por encima de 100 ppb son
+peligrosos para grupos de riesgo. El nivel medio observado en nuestros
+datos está por debajo de los 100, así como el percentil 75, lo que
+indica que no más del 25 por ciento de los días se padecieron niveles
+problemáticos de ozono. De hecho, el número de días por encima de 100
+ppb fue de 7.
+
+El coeficiente de variación refleja una dispersión moderada, es decir,
+indica cierta variabilidad de los niveles de ozono a lo largo del
+período de observación. Por su parte, el coeficiente de asimetría
+confirma lo que observábamos en el histograma: una fuerte asimetría a la
+derecha como consecuencia de la existencia de elevados niveles de ozono
+en algunos días en particular.
+
+\hypertarget{radiaciuxf3n-solar}{%
+\subsubsection{Radiación solar}\label{radiaciuxf3n-solar}}
+
+En \href{https://es.wikipedia.org/wiki/Langley}{Wikipedia} hemos
+encontrado que:
+
+\emph{La insolación anual en la parte alta de la atmósfera a diferentes
+latitudes es: Para el polo la insolación anual es 133,2
+kilolangleys/año. En el ecuador asciende a 320,9 kilolangleys/año, donde
+el kilolangley=1000 langleys.}
+
+Nuestros datos se refieren a un período de 4 horas. Tomemos como
+referencia el ecuador, que recibe una radiación promedio en 4 horas de
+219.7945205 Langleys. Por tanto, aunque la media de nuestros datos está
+por debajo, no ocurre así con la mediana: ésta se aproxima bastante al
+promedio por lo que podemos confirmar que al menos la mitad de los días
+observados tuvieron una radiación por encima del promedio del ecuador.
+La dispersión, según muestra el coeficiente de variación es
+moderada-baja, indicando no muchas diferencias en la radiación a lo
+largo de todo el período de observación. Finalmente, el coeficiente de
+asimetría es sólo ligeramente negativo, indicando simetría de la
+distribución de frecuencias: las diferencias observadas con respecto a
+la radiación media se dan casi en el mismo sentido a la izquierda y a la
+derecha de ésta.
+
+\hypertarget{velocidad-del-viento}{%
+\subsubsection{Velocidad del viento}\label{velocidad-del-viento}}
+
+Vamos a valorar las medidas de posición en la
+\href{https://en.wikipedia.org/wiki/Beaufort_scale}{escala de Beaufort}:
+
+\begin{itemize}
+\tightlist
+\item
+  La velocidad media del viento se considera brisa suave.
+\item
+  El percentil 25 se considera brisa ligera. Por tanto el 25\% de los
+  días tuvieron vientos inferiores o iguales a brisa ligera.
+\item
+  La mediana es considerada brisa suave, así que el 50\% de los días
+  hubo, como máximo, una brisa moderada.
+\item
+  El percentil 75 es considerado igualmente brisa suave. Por tanto, no
+  más del 75\% de los días hubo vientos por encima de una brisa suave.
+\end{itemize}
+
+La cercanía entre los percentiles 75 y 25 ya indica no excesiva
+variabilidad en la velocidad del viento, conclusión que se ve ratificada
+por el coeficiente de variación, del 35.38\%. Finalmente, el coeficiente
+de asimetría indica que la distribución de frecuencias es simétrica a
+izquierda y derecha de la media.
+
+\hypertarget{temperatura-muxe1xima-diaria}{%
+\subsubsection{Temperatura máxima
+diaria}\label{temperatura-muxe1xima-diaria}}
+
+Para comparar las medidas descriptivas con algún valor de referencia,
+vamos a considerar el promedio de los meses de mayo a septiembre en
+Nueva York que aparecen
+\href{https://www.currentresults.com/Weather/New-York/Places/new-york-city-temperatures-by-month-average.php}{en
+este enlace}, que es de
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{(}\DecValTok{71}\OperatorTok{+}\DecValTok{79}\OperatorTok{+}\DecValTok{84}\OperatorTok{+}\DecValTok{83}\OperatorTok{+}\DecValTok{75}\NormalTok{)}\OperatorTok{/}\DecValTok{5}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 78.4
+\end{verbatim}
+
+y se refieren al período 1981 a 2010:
+
+\begin{itemize}
+\tightlist
+\item
+  El valor medio de nuestros datos (corresponden a 1973) está
+  ligeramente por debajo, pero no así la mediana.
+\item
+  Como cabe esperar, el percentil 25 está por debajo del valor medio
+  entre 1981 y 2010, y el percentil 75 por encima.
+\end{itemize}
+
+Por otra parte, el coeficiente de variación es el menor de todos los
+observados en las variables analizadas, e indica que el período de mayo
+a septiembre de 1973 fue moderadamente estable en cuanto a las
+temperaturas máximas diarias. Finalmente, el coeficiente de asimetría
+también es cercano a cero, indicando simetría de las frecuencias de
+valores a izquierda y derecha de la media.
+
+\hypertarget{anuxe1lisis-de-la-presencia-de-datos-atuxedpicos}{%
+\subsubsection{Análisis de la presencia de datos
+atípicos}\label{anuxe1lisis-de-la-presencia-de-datos-atuxedpicos}}
+
+Ahora vamos a identificar datos atípicos en cada una de las variables
+observadas. En caso de existir datos atípicos, vamos a identificar el
+día y el mes en que se dio.
+
+\hypertarget{ozono-1}{%
+\subsubsection{Ozono}\label{ozono-1}}
+
+Mostramos a continuación el diagrama de caja con la identificación de
+los valores atípicos:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{datos <-}\StringTok{ }\NormalTok{airquality[}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Ozone), ]}\CommentTok{# Eliminamos los que no tienen valor observado}
+\NormalTok{bp <-}\StringTok{ }\KeywordTok{boxplot}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Ozone)}
+\NormalTok{filtro <-}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Ozone }\OperatorTok{>}\StringTok{ }\NormalTok{bp}\OperatorTok{$}\NormalTok{stats[}\DecValTok{5}\NormalTok{] }\OperatorTok{|}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Ozone }\OperatorTok{<}\StringTok{ }\NormalTok{bp}\OperatorTok{$}\NormalTok{stats[}\DecValTok{1}\NormalTok{]}
+\NormalTok{x <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\FloatTok{1.25}\NormalTok{, }\KeywordTok{sum}\NormalTok{(filtro))}
+\NormalTok{y <-}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Ozone[filtro]}
+\NormalTok{id <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Day[filtro], }\StringTok{"th of month"}\NormalTok{, datos}\OperatorTok{$}\NormalTok{Month[filtro])}
+\KeywordTok{text}\NormalTok{(x, y, id)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1_Practica_Descriptiva_Ejercicio_Plantilla_files/figure-latex/unnamed-chunk-7-1.pdf}
+
+\hypertarget{radiaciuxf3n-solar-1}{%
+\subsubsection{Radiación solar}\label{radiaciuxf3n-solar-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{datos <-}\StringTok{ }\NormalTok{airquality[}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Solar.R), ]}\CommentTok{# Eliminamos los que no tienen valor observado}
+\NormalTok{bp <-}\StringTok{ }\KeywordTok{boxplot}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Solar.R)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1_Practica_Descriptiva_Ejercicio_Plantilla_files/figure-latex/unnamed-chunk-8-1.pdf}
+
+\hypertarget{velocidad-promedio-del-viento}{%
+\subsubsection{Velocidad promedio del
+viento}\label{velocidad-promedio-del-viento}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{datos <-}\StringTok{ }\NormalTok{airquality[}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Wind), ]}\CommentTok{# Eliminamos los que no tienen valor observado}
+\NormalTok{bp <-}\StringTok{ }\KeywordTok{boxplot}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Wind)}
+\NormalTok{filtro <-}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Wind }\OperatorTok{>}\StringTok{ }\NormalTok{bp}\OperatorTok{$}\NormalTok{stats[}\DecValTok{5}\NormalTok{] }\OperatorTok{|}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Wind }\OperatorTok{<}\StringTok{ }\NormalTok{bp}\OperatorTok{$}\NormalTok{stats[}\DecValTok{1}\NormalTok{]}
+\NormalTok{x <-}\StringTok{ }\KeywordTok{rep}\NormalTok{(}\FloatTok{1.25}\NormalTok{, }\KeywordTok{sum}\NormalTok{(filtro))}
+\NormalTok{y <-}\StringTok{ }\NormalTok{datos}\OperatorTok{$}\NormalTok{Wind[filtro]}
+\NormalTok{id <-}\StringTok{ }\KeywordTok{paste}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Day[filtro], }\StringTok{"th of month"}\NormalTok{, datos}\OperatorTok{$}\NormalTok{Month[filtro])}
+\KeywordTok{text}\NormalTok{(x, y, id)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1_Practica_Descriptiva_Ejercicio_Plantilla_files/figure-latex/unnamed-chunk-9-1.pdf}
+
+\hypertarget{temperatura-muxe1xima-diaria-1}{%
+\subsubsection{Temperatura máxima
+diaria}\label{temperatura-muxe1xima-diaria-1}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{datos <-}\StringTok{ }\NormalTok{airquality[}\OperatorTok{!}\KeywordTok{is.na}\NormalTok{(airquality}\OperatorTok{$}\NormalTok{Temp), ]}\CommentTok{# Eliminamos los que no tienen valor observado}
+\NormalTok{bp <-}\StringTok{ }\KeywordTok{boxplot}\NormalTok{(datos}\OperatorTok{$}\NormalTok{Temp)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{1_Practica_Descriptiva_Ejercicio_Plantilla_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\hypertarget{conclusiones}{%
+\subsubsection{Conclusiones}\label{conclusiones}}
+
+(Destaca las conclusiones más relevantes)
+
+\end{document}

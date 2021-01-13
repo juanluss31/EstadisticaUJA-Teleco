@@ -1,0 +1,303 @@
+---
+title: "Práctica 4 Ejercicios"
+author: "Juan Luis Herreros Bódalo"
+date: Versión `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: true
+    toc_depth: 4
+    toc_float:
+      collapsed: false
+      smooth_scroll: false
+    theme: united
+    highlight: tango
+subtitle: Contraste de hipótesis paramétricas
+---
+```{r opciones, include=FALSE}
+#knitr::opts_chunk$set(echo = FALSE, include=FALSE)
+#knitr::opts_chunk$set(echo = TRUE, include=TRUE)
+```
+
+# Ejercicio 1
+
+En referencia a los datos de la Universidad de Kent que ya hemos usado, determina si existen diferencias significativas entre las notas medias entre English y Reading.
+
+
+Importamos los datos y echamos un vistazo a las variables que contiene:
+```{r}
+ej1.kent <- read.delim("KentStateUniversityData.txt")
+summary(ej1.kent)
+```
+
+```{r}
+ej1.English <- ej1.kent$English
+ej1.Reading <- ej1.kent$Reading
+```
+
+Comprobamos que los datos sigan una distribución normal mediante el test de Shapiro-Wilk:
+```{r}
+shapiro.test(ej1.English - ej1.Reading)
+```
+
+Al obtener un p-valor superior a 0.05 podemos confirmar que los datos siguen una distribución normal.
+
+
+Ahora, planteemos el contraste:
+$$
+H_0: \mu_{English} - \mu_{Reading} = 0
+$$
+frente a la alternativa
+$$
+H_0: \mu_{English} - \mu_{Reading} > 0
+$$
+Hay dos formas de hacer el contraste:
+
+La primera forma de hacerlo es como un contraste sobre la diferencia:
+```{r}
+ej1.dif <- ej1.English - ej1.Reading
+t.test(ej1.dif, mu = 0, alternative = "greater")
+```
+
+La segunda, como una comparación de poblaciones relacionadas:
+```{r}
+t.test(x = ej1.English, y = ej1.Reading, mu = 0, alternative = "greater", paired = TRUE)
+```
+
+Los resultados son idénticos y no nos permiten rechazar la hipótesis nula en favor de la alternativa ya que el p-valor es mayor a 0.05. Por tanto, no existen diferencias significativas entre las notas medias de English y Reading en la Universidad de Kent.
+
+# Ejercicio 2
+
+Está extraído de [este enlace](http://biocosas.github.io/R/050_anova.html)
+
+El departamento de Psicología de una Universidad de Castilla-La Mancha ha realizado un estudio sobre hábitos, preferencias y satisfacción sexual en estudiantes universitarios. Hemos utilizado los datos que recogieron en sus encuestas y queremos conocer si existen diferencias entre la frecuencia mensual de relaciones sexuales de estudiantes universitarios pertenecientes a tres titulaciones universitarias diferentes, T1, T2 y T3. Los datos són los siguientes:
+```{r}
+ej2.T1 <- c(11, 14, 7, 15, 11, 13, 11, 16, 10, 15, 18, 12, 9, 9, 10, 10, 15, 10, 14, 10, 10, 12, 14, 12, 15, 7, 13, 6, 10, 15, 20, 10, 13, 10, 6, 14, 8, 10, 8, 11)
+ej2.T2 <- c(13, 10, 12, 7, 5, 10, 10, 16, 9, 7, 7, 2, 6, 9, 9, 8, 8, 10, 3, 6, 5, 2, 9, 3, 4, 5, 10, 8, 5, 9, 10, 8, 13, 10, 0, 2, 1, 1, 0, 4)
+ej2.T3 <- c(6, 7, 3, 5, 9, 6, 1, 6, 0, 2, 5, 6, 11, 6, 7, 0, 5, 7, 5, 4, 7, 4, 2, 8, 9, 6, 1, 4, 7, 7, 8, 9, 7, 5, 1, 6, 9, 4, 7, 6)
+```
+
+Se pide realizar un contraste para determinar si existen diferencias significativas en la frecuencia promedio de relaciones sexuales entre las tres titulaciones y, en caso de que existan, especifica cuáles son esas diferencias.
+
+## Organización de los datos
+
+Primero necesitamos unir esos vectores en una hoja de datos.
+
+```{r}
+ej2.relaciones <- data.frame(Frecuencia = c(ej2.T1, ej2.T2, ej2.T3), 
+                       Titulación = c(rep("T1", length(ej2.T1)), 
+                                     rep("T2", length(ej2.T2)), 
+                                     rep("T3", length(ej2.T3))))
+summary(ej2.relaciones)
+```
+
+Podemos visualizar preliminarmente las diferencias:
+```{r}
+boxplot(Frecuencia ~ Titulación, data = ej2.relaciones)
+```
+
+Al parecer hay diferencias evidentes en la T1 respecto del resto, pero tenemos que contrastar su significación estadística.
+
+## Realización del ANOVA
+
+```{r}
+ej2.anova <- aov(Frecuencia ~ Titulación, data = ej2.relaciones)
+summary(ej2.anova)
+```
+
+El p-valor obtenido es inferior a 0.05, por tanto, existen diferencias estadísticamente significativas en las frecuencias mensuales de relaciones sexuales de los alumnos de las tres titulaciones.
+
+## Comprobación de los supuestos
+
+Ahora bien, debemos ser cuidadosos porque ese p-valor se ha calculado presuponiendo que se cumplen los requisitos para realizar un ANOVA:
+
+1. Independencia de las observaciones.
+2. Igualdad de las varianzas en los tres grupos.
+3. Normalidad de los datos de los tres grupos.
+
+Ahora vamos a comprobarlos todos ellos.
+
+En primer lugar, sobre la independencia de las observaciones, nos conformamos con pensar que quienes han realizado la encuesta habrán procurado que cada muestra en cada titulación se haya realizado de manera que los datos sean independientes unos de otros.
+
+Con respecto a la igualdad de las varianzas, si nos fijamos en los tres diagramas de cajas y bigotes que aparecen más arriba, la forma de sus cajas es similar, aunque la de la titulación 2 es algo más grande que las demás.
+
+Por último, hay que comprobar que dentro de cada grupo, es decir, dentro de cada titulación, los datos siguen distribuciones normales. Que dentro de cada grupo los datos sean normales sería lo mismo que decir que los datos de cada grupo menos la media de cada grupo sean normales. Por suerte, los datos de cada grupo menos la media de cada grupo son los residuos del modelo ANOVA, por lo que podemos realizar un simple contraste de normalidad de Shapiro-Wilk para ver si es aceptable que sigan una distribución normal:
+```{r}
+shapiro.test(ej2.anova$residuals)
+```
+
+Vemos que así es.
+
+## Pruebas post-hoc
+
+```{r}
+TukeyHSD(ej2.anova)
+plot(TukeyHSD(ej2.anova))
+```
+
+Lo que aparecen son los intervalos de confianza de las diferencias entre las medias.Y nos proporcionan las siguientes conclusiones:
+
+1. La diferencia media T2-T1 es significativa en favor de T1.
+2. La diferencia media T3-T1 es significativa en favor de T1.
+3. Parece que la diferencia media T3-T2 es significativa en favor de T2, sin embargo, el intervalo de confianza de esta diferencia media incluye el cero, por lo que no es significativa.
+
+# Ejercicio 3
+
+De nuevo en referencia a los datos de la Universidad de Kent, determina si en términos generales y a partir de los datos de esa muestra podemos afirmar que la proporción de varones atletas es superior a la de mujeres atletas.
+
+Si llamamos $pv_a$ a la proporción de varones atletas y $pm_a$ a la proporción de mujeres atletas, la hipótesis nula es 
+$$
+H_0: pv_a = pm_a,
+$$
+y la alternativa,
+$$
+H_1: pv_a > pm_a.
+$$
+
+La función *prop.test()* necesita una tabla o matriz como la siguiente:
+
+Grupo          | Éxitos                               | Fracasos
+-------------  | ------------------------------------ | ---------------------------
+Primer grupo   | Número de éxitos en el primer grupo  | Número de fracasos en el segundo grupo
+Segundo grupo  | Número de éxitos en el segundo grupo | Número de fracasos en el segundo grupo
+
+En nuestro ejemplo sería:
+
+Grupo          | Atletas (1)                          | No atletas (0)
+-------------  | ------------------------------------ | ---------------------------
+Varones (0)    | Número de varones atletas            | Número de varones no atletas
+Mujeres (1)    | Número de mujeres atletas            | Número de mujeres no atletas
+
+Creamos la tabla:
+```{r}
+table(ej1.kent$Gender,ej1.kent$Athlete)
+```
+Como necesitamos que los atletas estén en la primera columna, las intercambiamos.
+```{r}
+print(ej3.tabla <- table(ej1.kent$Gender,ej1.kent$Athlete)[, 2:1])
+```
+Ya podemos realizar el contraste:
+```{r}
+prop.test(ej3.tabla, alternative = 'greater')
+```
+Como podemos apreciar, en la muestra de varones hay un 49.5% de atletas, mientras que en las de mujeres hay un 35.6%. Además, el p-valor es menor que 0.05, por lo que podemos rechazar la hipótesis nula en favor de la alternativa pudiendo afirmar que la proporción de varones atletas es mayor que la de mujeres atletas.
+
+# Ejercicio 4
+
+En [este enlace](https://www.nytimes.com/es/2016/05/27/en-estados-unidos-cada-vez-hay-menos-fumadores/) aparece que el porcentaje de fumadores en Estados Unidos está en el 15.1%. Utiliza los datos de la Universidad de Kent para confirmar si el porcentaje de fumadores universitarios es superior a la de la población en general. Ten en cuenta que la variable *Smoking* toma valores *0 = Nonsmoker*, *1 = Past smoker* y *2 = Current smoker*.
+
+Primero vamos a ver los datos que tenemos:
+```{r}
+table(ej1.kent$Smoking)
+```
+
+
+Tenemos por tanto que contrastar 
+$$H_0: p=0.151$$
+frente a 
+$$H_1: p>0.151$$
+donde $p$ es la probabilidad de obtener resultados dentro de los límites de tolerancia.
+
+Antes de hacer nada hay que plantearse si tenemos los requisitos necesarios para plantear el contraste, que en este caso es un contraste $\chi^2$: se nos requieren al menos 5 éxitos y 5 fracasos, requisito que se cumple de sobra.
+
+La información que tenemos que proporcionar para hacer el test es:
+
+1. El número de éxitos, *x*, entendiendo como *éxito*, en este caso, los estudiantes fumadores.
+2. El número de experimentos, *n*.
+3. La hipótesis nula, $p=0.151$.
+4. La dirección de la hipótesis alternativa, en este caso a la derecha.
+
+
+El test en R se realiza de la siguiente manera:
+```{r}
+prop.test(x = 70, n = 304+37+70, p = 0.151, alternative = "greater")
+```
+
+Observemos que la salida proporciona bastante información (valor del estadístico, intervalo de confianza, ...). Por ejemplo, proporciona la estimación puntual, $\hat{p} = 0.17$, que indica que en la muestra el porcentaje de éxito sí que supera el 15.1%. Pero centrémonos en el p-valor: dado que es superior a 0.05 (p-value = 0.1527), no podemos rechazar $H_0$ en favor de $H_1$, es decir, no podemos concluir que el porcentaje de fumadores universitarios sea superior que al de la población general (15.1%).
+
+Viendo el intervalo de confianza a la derecha para la proporción, *(0.1408737 1)*, podemos llegar a la misma conclusión, porque 0.151 pertenece a él.
+
+# Ejercicio 5
+
+El proceso industrial de llenado del aceite en botellas de 750 ml de una determinada empresa se considera bajo control si su desviación típica es inferior o igual a 5 ml. La responsable del control de calidad te pide que compruebes si el proceso está bajo control y te ofrece los datos (en ml.) que se encuentran en el fichero *aceite2.txt*: ¿se puede aceptar estadísticamente que el proceso está bajo control con un nivel de confianza del 95%?
+
+Primero creamos la función para poder hacer el contraste.
+```{r}
+# Evitamos llamar a la función var.test porque ese es el nobre que tiene la función que compara dos varianzas
+ej5.var.test <- function(datos, sigma = NULL, var = NULL, alternative){
+  # En la hipótesis nula podemos especificar la desviación típica
+  if (!is.null(sigma)) var0 <- sigma^2
+  # O la varianza directamente
+  else var0 <- var
+  # Definimos el estadístico
+  chi2 <- sum((datos - mean(datos))^2) / var0
+  # Obtenemos el p-valor
+  if (alternative == "two.sided") p.value <- 2 * min(pchisq(chi2, length(datos) - 1), 1 - pchisq(chi2, length(datos) - 1))
+  if (alternative == "less") p.value <- pchisq(chi2, length(datos) - 1)
+  if (alternative == "greater") p.value <- 1 - pchisq(chi2, length(datos) - 1)
+  return(list(statistic = chi2, p.value = p.value))
+}
+```
+
+En primer lugar, si deseamos realizar un contraste sobre la desviación típica o la varianza es IMPRESCINDIBLE que comprobemos que es admisible la hipótesis de que los datos proceden de una distribución normal:
+```{r}
+ej5.aceite <- read.delim("aceite2.txt")
+shapiro.test(ej5.aceite$volumen)
+```
+
+Como vemos, el p-valor 0.7237 indica que podemos aceptar la hipótesis de que los datos proceden de una distribución normal, requisito necesario para la realización de nuestro contraste sobre la desviación típica.
+
+Nuestras hipótesis son:
+$$
+H_0: \sigma = 5
+$$
+frente a 
+$$
+H_1: \sigma < 5
+$$
+
+Realizamos el contraste:
+```{r}
+ej5.var.test(ej5.aceite$volumen, sigma = 5, alternative = "less")
+```
+
+Visto el p-valor, no podemos rechazar la hipótesis nula en favor de la alternativa, así que no podemos confirmar que el proceso está bajo control con un nivel de confianza del 95%
+
+# Ejercicio 6
+
+Utiliza algunas de las variables de los datos de la Universidad de Kent para plantear algún contraste de hipótesis que te resulte interesante.
+
+Vamos a intentar confirmar que los estudiantes que no viven en el campus dedican más horas de estudio que los que viven en el campus.
+
+Echemos un vistazo a la variable LiveOnCampus
+```{r}
+table(ej1.kent$LiveOnCampus)
+```
+Tenemos suficientes datos para comparar las medias.
+
+Vamos a notar $\mu_{on}$ al tiempo medio de estudio de los jóvenes universitarios que practican viven en el campus, y $\mu_{off}$ al tiempo medio de estudio de los que no viven allí. Las hipótesis serían
+$$
+H_0: \mu_{on} = \mu_{off}
+$$
+frente a 
+$$
+H_1: \mu_{on} < \mu_{off}
+$$
+
+Como hemos dicho, hay que tener en cuenta que el contraste realmente se realiza sobre la diferencia de las medias, por lo que podemos re-enunciarlo como
+$$
+H_0: \mu_{on} - \mu_{off} = 0
+$$
+frente a 
+$$
+H_1: \mu_{on} - \mu_{off} < 0
+$$
+
+Realizamos el contraste de la siguiente manera:
+
+```{r}
+ej6.on <- ej1.kent$StudyTime[ej1.kent$LiveOnCampus == 1]
+ej6.off<- ej1.kent$StudyTime[ej1.kent$LiveOnCampus == 0]
+t.test(ej6.on, ej6.off, alternative = "less", mu = 0)
+
+```
+Al obtener un p-valor menor de 0.05 podemos descartar la hipótesis nula en favor de la alternativa y afirmar que los estudiantes que viven en el campus estudian menos que los que viven fuera. En concreto la media de los que estudian fuera es de 8.3 horas mientras que la de los que viven en el campus es de 5.7 horas.

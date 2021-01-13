@@ -1,0 +1,330 @@
+---
+title: |
+  | Pr&aacute;cticas de Estad&iacute;stica
+  | Ejercicio de la Pr&aacute;ctica 2
+  | Variable Aleatoria
+author:
+- name: Juan Luis Herreros B&oacute;dalo
+date: Versi&oacute;n `r format(Sys.Date(), "%d-%B-%Y")`
+output:
+  html_document:
+    toc: yes
+    toc_float:
+      collapsed: no
+      smooth_scroll: no
+    theme: united
+    highlight: tango
+  pdf_document:
+    toc: yes
+---
+
+```{r opciones, include=FALSE}
+# INSTRUCCIONES:
+# 1. Utiliza la plantilla para realizar el ejercicio completando las partes faltantes y todas las demás respuestas
+# 2. Cuando acabes, debes generar el fichero HTML clicando en "Knit"
+```
+
+
+# Primer ejercicio
+
+Consideremos una variable aleatoria, $X$ que sigue una distribución $B(15, 0.33)$. Se pide:
+
+1. Calcular:
+* $P[4\leq X \leq 8]$.
+```{r}
+# Responde aquí
+sum(dbinom(4:8,15,0.33))
+```
+* $P[4 < X \leq 8]$.
+```{r}
+# Responde aquí
+sum(dbinom(5:8,15,0.33))
+```
+* $P[4 < X < 8]$.
+```{r}
+# Responde aquí
+sum(dbinom(5:7,15,0.33))
+```
+* $P[X \geq 4]$.
+```{r}
+# Responde aquí
+sum(dbinom(4:15,15,0.33))
+```
+* $P[X > 4]$.
+```{r}
+# Responde aquí
+sum(dbinom(5:15,15,0.33))
+```
+2. Obtener:
+* El primer valor de la variable que deja por debajo de sí al menos el 95% de la probabilidad:
+```{r}
+# Responde aquí
+qbinom(0.95,15,0.33)
+```
+* El percentil 95 de la distribución.
+```{r}
+# Responde aquí
+qbinom(0.95,15,0.33)
+```
+3. Obtener una muestra de tamaño 10 de esta distribución
+```{r}
+# Responde aquí
+rbinom(10,15,0.33)
+```
+
+# Segundo ejercicio
+
+Consideremos una variable aleatoria que sigue una distribución $Poisson(7.2)$. Se pide:
+
+1. Calcular:
+* $P[X > 5]$.
+```{r}
+# Responde aquí
+1-sum(dpois(0:5,7.2))
+```
+* $P[X \geq 5]$.
+```{r}
+# Responde aquí
+1-sum(dpois(0:4,7.2))
+```
+* $P[2 < X < 8]$.
+```{r}
+# Responde aquí
+sum(dpois(3:7,7.2))
+```
+* $P[2 \leq X < 8]$.
+```{r}
+# Responde aquí
+sum(dpois(2:7,7.2))
+```
+* $P[2 < X \leq 8]$.
+```{r}
+# Responde aquí
+sum(dpois(3:8,7.2))
+```
+* $P[X < 7]$.
+```{r}
+# Responde aquí
+sum(dpois(0:6,7.2))
+```
+* $P[X \leq 7]$.
+```{r}
+# Responde aquí
+sum(dpois(0:7,7.2))
+```
+* $P[X = 7]$.
+```{r}
+# Responde aquí
+sum(dpois(7,7.2))
+```
+2. Obtener:
+* El percentil 75 de la distribución.
+```{r}
+# Responde aquí
+qpois(0.75,7.2)
+```
+* El primer valor de la variable que deja por debajo de sí al menos el 5% de sus valores.
+```{r}
+# Responde aquí
+qpois(0.05,7.2)
+```
+3. Obtener una muestra de tamaño 5 de la distribución.
+```{r}
+# Responde aquí
+rpois(5,7.2)
+```
+
+# Tercer ejercicio
+
+Consideremos una variable aleatoria $X$ que sigue una distribución exponencial **de media 2**. Se pide:
+
+1. Calcular:
+* $P [X = 5]$.
+```{r}
+# Responde aquí
+pexp(5,1/2)-pexp(5,1/2)
+```
+* $P [X \leq 5]$.
+```{r}
+# Responde aquí
+pexp(5,1/2)
+```
+* $P [X < 5]$.
+```{r}
+# Responde aquí
+pexp(5,1/2)
+```
+* $P [2 \leq X \leq 8]$.
+```{r}
+# Responde aquí
+pexp(8,1/2)-pexp(2,1/2)
+```
+* $P [2 < X \leq 8]$.
+```{r}
+# Responde aquí
+pexp(8,1/2)-pexp(2,1/2)
+```
+* $P [2 \leq X < 8]$.
+```{r}
+# Responde aquí
+pexp(8,1/2)-pexp(2,1/2)
+```
+2. Obtener:
+* El percentil 5 y el percentil 95.
+```{r}
+# Responde aquí
+qexp(c(0.05,0.95),1/2)
+```
+* El valor de la variable que deja por debajo de sí el 30% del resto de valores de la variable.
+```{r}
+# Responde aquí
+qexp(0.3,1/2)
+```
+* El valor de la variable que deja por encima de sí el 70% del resto de valores de la variable.
+```{r}
+# Responde aquí
+qexp(0.3,1/2)
+```
+3. Obtener una muestra de tamaño 10 de la distribución.
+```{r}
+# Responde aquí
+rexp(10,1/2)
+```
+4. Representar:
+* La probabilidad $P [2 \leq X \leq 8]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- 2 # Extremo inferior
+b <- 8 # Extremo superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 1/2), 0) 
+curve(dexp(x, 1/2), xlim = c(0, qexp(0.99, 1/2)), main = 'exp(2)')
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [X \leq 8]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- 0 # Extremo inferior
+b <- 8 # Extremo superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 1/2), 0) 
+curve(dexp(x, 1/2), xlim = c(0, qexp(0.99, 1/2)), main = 'exp(2)')
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [X > 2]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- 2 # Extremo inferior
+b <- qexp(0.99, 1/2) # Extremo superior
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 1/2), 0) 
+curve(dexp(x, 1/2), xlim = c(0, qexp(0.99, 1/2)), main = 'exp(2)')
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [X = 2]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+a <- 2 # Extremo inferior
+b <- 2 # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dexp(seq(a, b, 0.01), 1/2), 0) 
+curve(dexp(x, 1/2), xlim = c(0, qexp(0.99, 1/2)), main = 'exp(2)') 
+polygon(cord.x, cord.y, col = 'red')
+
+```
+
+# Cuarto ejercicio
+
+Consideremos una variable aleatoria $W$ con distribución $Normal(250, 13)$. Se pide:
+
+1. Calcular:
+* $P[240 \leq W < 250]$.
+```{r}
+# Responde aquí
+pnorm(250,250,13)-pnorm(240,250,13)
+```
+* $P[240 < W \leq 250]$.
+```{r}
+# Responde aquí
+pnorm(250,250,13)-pnorm(240,250,13)
+```
+* $P [W > 271]$.
+```{r}
+# Responde aquí
+1-pnorm(271,250,13)
+```
+* $P [W < 271]$.
+```{r}
+# Responde aquí
+pnorm(271,250,13)
+```
+* $P [W = 271]$.
+```{r}
+# Responde aquí
+pnorm(271,250,13)-pnorm(271,250,13)
+```
+2. Obtener:
+* El intervalo de valores de la variable que excluye el 5% de los valores más altos de la distribución y el 5% de valores más bajos.
+```{r}
+# Responde aquí
+qnorm(c(0.95,0.05),250,13)
+```
+3. Obtener una muestra de tamaño 10 de la distribución.
+```{r}
+# Responde aquí
+rnorm(10,250,13)
+```
+4. Representar:
+* La probabilidad $P [W > 271]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- 271 # Extremo inferior
+b <- qnorm(0.999, 250,13) # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dnorm(seq(a, b, 0.01), 250,13), 0) 
+curve(dnorm(x, 250,13), xlim = qnorm(c(0.001, 0.999),250,13), main = 'Normal(250, 13)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [W < 271]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- qnorm(0.001, 250,13) # Extremo inferior
+b <- 271 # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dnorm(seq(a, b, 0.01), 250,13), 0) 
+curve(dnorm(x, 250,13), xlim = qnorm(c(0.001, 0.999),250,13), main = 'Normal(250, 13)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [W \leq 271]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- qnorm(0.001, 250,13) # Extremo inferior
+b <- 271 # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dnorm(seq(a, b, 0.01), 250,13), 0) 
+curve(dnorm(x, 250,13), xlim = qnorm(c(0.001, 0.999),250,13), main = 'Normal(250, 13)') 
+polygon(cord.x, cord.y, col = 'red')
+```
+
+* La probabilidad $P [W = 271]$ como área bajo la función de densidad.
+```{r}
+# Responde aquí
+# Primero representamos lo que estamos calculando
+a <- 271 # Extremo inferior
+b <- 271 # Extremo superior (obviamente no ponemos infinito, sino un valor alto de la distribución)
+cord.x <- c(a, seq(a, b, 0.01), b) 
+cord.y <- c(0, dnorm(seq(a, b, 0.01), 250,13), 0) 
+curve(dnorm(x, 250,13), xlim = qnorm(c(0.001, 0.999),250,13), main = 'Normal(250, 13)') 
+polygon(cord.x, cord.y, col = 'red')
+```
